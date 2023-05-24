@@ -67,6 +67,10 @@ public class MIClient {
             .setOsName("Windows 10")
             .setProductName("WSO2 Micro Integrator")
             .setJavaHome("C:\\Program Files\\OpenJDK\\jdk-11.0.18.10-hotspot").build();
+
+    public static void main(String[] args) {
+        MIClient miClient = new MIClient();
+    }
     public MIClient() {
         initializeGrpcClient();
     }
