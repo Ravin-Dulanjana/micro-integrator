@@ -53,7 +53,7 @@ public class CarbonAppResourceGrpc {
         //Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
     }
 
-    private void handlePost(String performedBy, org.apache.axis2.context.MessageContext axisMsgCtx) {
+    public void handlePost(String performedBy, org.apache.axis2.context.MessageContext axisMsgCtx) {
         String contentType = axisMsgCtx.getProperty(Constants.CONTENT_TYPE).toString();
         if (!contentType.contains(MULTIPART_FORMDATA_DATA_TYPE)) {
             org.wso2.micro.integrator.grpc.proto.Error response = GrpcUtils.createProtoError("Error when deploying the Carbon Application. " +
@@ -115,7 +115,7 @@ public class CarbonAppResourceGrpc {
         }
     }
 
-    private void handleDelete(String performedBy, MessageContext messageContext, org.apache.axis2.context.MessageContext axisMsgCtx) {
+    public void handleDelete(String performedBy, MessageContext messageContext, org.apache.axis2.context.MessageContext axisMsgCtx) {
         String cAppName = GrpcUtils.getPathParameter(messageContext, CAPP_NAME);
         JSONObject jsonResponse = new JSONObject();
         if (!Objects.isNull(cAppName)) {
