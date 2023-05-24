@@ -18,6 +18,7 @@ message DataResponse {
     API = 2;
     ENDPOINTLIST = 3;
     ENDPOINT = 4;
+    CARBONAPPLIST = 5;
   }
   ResponseType responseType = 1;
   string response = 2;
@@ -31,6 +32,10 @@ message DataRequest {
     API api = 4;
     EndpointList endpointList = 5;
     Endpoint endpoint = 6;
+    CarbonAppList carbonAppList = 7;
+    CarbonApp carbonApp = 8;
+    Error error = 9;
+    Message message = 10;
   }
 }
 
@@ -60,6 +65,7 @@ message API{
   repeated Resource resources = 7;
   string version = 8;
   string url = 9;
+  string host = 10;
 }
 
 message Resource{
@@ -99,4 +105,31 @@ message Endpoint{
   string name = 7;
   string type = 8;
   bool isActive = 9;
+}
+
+message Artifact{
+  string name = 1;
+  string type = 2;
+}
+
+message CarbonAppList{
+  int32 totalCount = 1;
+  int32 activeCount = 2;
+  repeated CarbonApp activeList = 3;
+  int32 faultyCount = 4;
+  repeated CarbonApp faultyList = 5;
+}
+
+message CarbonApp{
+  string name = 1;
+  string version = 2;
+  repeated Artifact artifacts = 3;
+}
+
+message Error{
+  string message = 1;
+}
+
+message Message{
+  string message = 1;
 }
