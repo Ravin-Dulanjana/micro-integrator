@@ -132,11 +132,11 @@ public class CarbonAppResource extends APIResource {
                 break;
             }
             case Constants.HTTP_POST: {
-                handlePost(performedBy, axis2MessageContext);
+                new CarbonAppResourceGrpc().handlePost(performedBy, axis2MessageContext);
                 break;
             }
             case Constants.HTTP_DELETE: {
-                handleDelete(performedBy, messageContext, axis2MessageContext);
+                new CarbonAppResourceGrpc().handleDelete(performedBy, messageContext, axis2MessageContext);
                 break;
             }
             default: {
