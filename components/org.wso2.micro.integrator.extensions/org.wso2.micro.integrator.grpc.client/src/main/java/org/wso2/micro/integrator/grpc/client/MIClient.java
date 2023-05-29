@@ -18,8 +18,7 @@ public class MIClient {
             .setName("HealthcareAPI")
             .setContext("/healthcare")
             .addResources(Resource.newBuilder().addMethods("GET").setUrl("/doctor/{doctorType}").build())
-            .setVersion("N/A")
-            .setUrl("http://localhost:8290/healthcare").build();
+            .setVersion("N/A").build();
     APISummary apiSummary = APISummary.newBuilder()
             .setTracing("disabled")
             .setName("HealthcareAPI")

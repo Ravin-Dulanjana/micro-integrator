@@ -26,16 +26,18 @@ message DataResponse {
 
 message DataRequest {
   oneof requests{
-    Handshake handshake = 1;
-    ServerInfo serverInfo = 2;
-    APIList apiList= 3;
-    API api = 4;
-    EndpointList endpointList = 5;
-    Endpoint endpoint = 6;
-    CarbonAppList carbonAppList = 7;
-    CarbonApp carbonApp = 8;
-    Error error = 9;
-    Message message = 10;
+    Error error = 1;
+    Message message = 2;
+    Handshake handshake = 3;
+    ServerInfo serverInfo = 4;
+    APIList apiList= 5;
+    API api = 6;
+    EndpointList endpointList = 7;
+    Endpoint endpoint = 8;
+    CarbonAppList carbonAppList = 9;
+    CarbonApp carbonApp = 10;
+    ConnectorList connectorList = 11;
+
   }
 }
 
@@ -64,8 +66,7 @@ message API{
   string context = 6;
   repeated Resource resources = 7;
   string version = 8;
-  string url = 9;
-  string host = 10;
+  string host = 9;
 }
 
 message Resource{
@@ -132,4 +133,16 @@ message Error{
 
 message Message{
   string message = 1;
+}
+
+message ConnectorList{
+  int32 count = 1;
+  repeated ConnectorSummary connectorSummaries = 2;
+}
+
+message ConnectorSummary{
+  string package = 1;
+  string name = 2;
+  string description = 3;
+  string status = 4;
 }
