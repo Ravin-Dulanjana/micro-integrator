@@ -41,7 +41,6 @@ import org.wso2.carbon.inbound.endpoint.internal.http.api.APIResource;
 import org.wso2.micro.application.deployer.CarbonApplication;
 import org.wso2.micro.application.deployer.config.Artifact;
 import org.wso2.micro.core.util.AuditLogger;
-import org.wso2.micro.integrator.grpc.client.CarbonAppResourceGrpc;
 import org.wso2.micro.integrator.initializer.deployment.application.deployer.CappDeployer;
 import org.wso2.micro.integrator.management.apis.security.handler.SecurityUtils;
 
@@ -122,7 +121,7 @@ public class CarbonAppResource extends APIResource {
                     if (Constants.MEDIA_TYPE_APPLICATION_OCTET_STREAM.equals(acceptHeader)) {
                         populateFileContent(messageContext, param);
                     } else {
-                        new CarbonAppResourceGrpc().populateGrpcCarbonAppData(messageContext, param);
+                        populateCarbonAppData(messageContext, param);
                     }
                 } else if (Objects.nonNull(searchKey) && !searchKey.trim().isEmpty()) {
                     populateSearchResults(messageContext, searchKey.toLowerCase());
@@ -132,11 +131,11 @@ public class CarbonAppResource extends APIResource {
                 break;
             }
             case Constants.HTTP_POST: {
-                new CarbonAppResourceGrpc().handlePost(performedBy, axis2MessageContext);
+                handlePost(performedBy, axis2MessageContext);
                 break;
             }
             case Constants.HTTP_DELETE: {
-                new CarbonAppResourceGrpc().handleDelete(performedBy, messageContext, axis2MessageContext);
+                handleDelete(performedBy, messageContext, axis2MessageContext);
                 break;
             }
             default: {
@@ -159,7 +158,6 @@ public class CarbonAppResource extends APIResource {
         List<CarbonApplication> faultyAppList = CappDeployer.getFaultyCAppObjects().stream()
                 .filter(capp -> capp.getAppName().toLowerCase().contains(searchKey)).collect(Collectors.toList());
         setResponseBody(appList, faultyAppList, messageContext);
-        new CarbonAppResourceGrpc().setGrpcResponseBody(appList, faultyAppList, messageContext);
     }
 
     private void setResponseBody(Collection<CarbonApplication> appList, Collection<CarbonApplication> faultyAppList,
@@ -367,9 +365,7 @@ public class CarbonAppResource extends APIResource {
                 = CappDeployer.getCarbonApps();
 
         List<CarbonApplication> faultyAppList = CappDeployer.getFaultyCAppObjects();
-
         setResponseBody(appList, faultyAppList, messageContext);
-        new CarbonAppResourceGrpc().setGrpcResponseBody(appList, faultyAppList, messageContext);
     }
 
     private void populateCarbonAppData(MessageContext messageContext, String carbonAppName) {
