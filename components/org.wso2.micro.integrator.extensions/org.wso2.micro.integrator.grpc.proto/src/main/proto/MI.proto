@@ -6,6 +6,7 @@ option java_outer_classname = "MIProto";
 
 package org.wso2.micro.integrator.grpc.proto;
 
+import "google/protobuf/struct.proto";
 
 service MIService {
   rpc dataExchange(stream DataRequest) returns (stream DataResponse){};
@@ -37,7 +38,9 @@ message DataRequest {
     CarbonAppList carbonAppList = 9;
     CarbonApp carbonApp = 10;
     ConnectorList connectorList = 11;
-
+    Connector connector = 12;
+    DataServiceList dataServiceList = 13;
+    DataService dataService = 14;
   }
 }
 
@@ -137,12 +140,114 @@ message Message{
 
 message ConnectorList{
   int32 count = 1;
-  repeated ConnectorSummary connectorSummaries = 2;
+  repeated Connector connectors = 2;
 }
 
-message ConnectorSummary{
+message Connector{
   string package = 1;
   string name = 2;
   string description = 3;
   string status = 4;
+}
+
+message DataServiceList{
+  int32 count = 1;
+  repeated DataServiceSummary dataServicesSummaries = 2;
+}
+
+message DataServiceSummary{
+  string name = 1;
+  string wsdl1_1 = 2;
+  string wsdl1_0 = 3;
+}
+
+message DataService{
+  repeated string operations = 1;
+  string configuration = 2;
+  string serviceGroupName = 3;
+  repeated DataServiceResource resources = 4;
+  string serviceDescription = 5;
+  string wsdl1_1 = 6;
+  string wsdl1_0 = 7;
+  string serviceName = 8;
+  repeated Query queries = 9;
+  repeated DSDataSource dsDataSources = 10;
+  string swagger_url = 11;
+}
+
+message Query{
+  string id = 1;
+  string dataSourceId = 2;
+  string namespace = 3;
+}
+
+message DSDataSource{
+  string dataSourceId = 1;
+  string dataSourceType = 2;
+  map<string, string> dataSourceProperties = 3;
+}
+
+message DataServiceResource{
+  string resourcePath = 1;
+  string resourceMethod = 2;
+  string resourceQuery = 3;
+  repeated QueryParam queryParams = 4;
+}
+
+message QueryParam{
+  string name = 1;
+  string sqlType = 2;
+  string type = 3;
+  string paramType = 4;
+  repeated int32 ordinals = 5;
+  ParamValue defaultValue = 6;
+  repeated Validator validators = 7;
+  string structType = 8;
+  bool forceDefault = 9;
+  bool optional = 10;
+}
+
+message ParamValue{
+  int32 valueType = 1;
+  string scalarValue = 2;
+  repeated ParamValue arrayValue = 3;
+  google.protobuf.Struct udt = 4;
+}
+
+message Validator{
+  string message =1;
+}
+
+message DataSourceList{
+  int32 count = 1;
+  repeated DataSourceSummary dataSourcesSummaries = 2;
+}
+
+message DataSourceSummary{
+  string name = 1;
+  string type = 2;
+}
+
+message DataSource{
+  DSConfigurationParameters dsConfigurationParameters = 1;
+  string driverClass = 2;
+  string name = 3;
+  string description = 4;
+  string type = 5;
+  string url = 6;
+  string status = 7;
+  string username = 8;
+  string configuration = 9;
+}
+
+message DSConfigurationParameters{
+  bool defaultAutoCommit = 1;
+  bool defaultReadOnly = 2;
+  bool removeAbandoned = 3;
+  string validationQuery = 4;
+  int32 validationTimeout = 5;
+  int32 maxActive = 6;
+  int32 maxIdle = 7;
+  int32 maxWait = 8;
+  int64 maxAge = 9;
 }
