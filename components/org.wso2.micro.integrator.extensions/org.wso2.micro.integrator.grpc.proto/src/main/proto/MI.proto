@@ -102,13 +102,28 @@ message EndpointSummary{
 message Endpoint{
   string tracing = 1;
   string method = 2;
-  string advanced = 3; //
-  string timeoutState = 4; //
-  string configuration = 5;
-  string uriTemplate = 6;
-  string name = 7;
-  string type = 8;
+  EPAdvanced epAdvanced = 3;
+  string configuration = 4;
+  string uriTemplate = 5;
+  string name = 6;
+  string type = 7;
   bool isActive = 9;
+}
+
+message EPAdvanced{
+  SuspendState suspendState = 1;
+  TimeoutState timeoutState = 2;
+}
+
+message SuspendState{
+  repeated int32 errorCodes = 1;
+  int64 maxDuration = 2;
+  int64 initialDuration = 3;
+}
+
+message TimeoutState{
+  repeated int32 errorCodes = 1;
+  int32 retries = 2;
 }
 
 message Artifact{
@@ -162,7 +177,7 @@ message DataServiceSummary{
 }
 
 message DataService{
-  repeated string operations = 1;
+  repeated Operation operations = 1;
   string configuration = 2;
   string serviceGroupName = 3;
   repeated DataServiceResource resources = 4;
@@ -200,22 +215,31 @@ message QueryParam{
   string type = 3;
   string paramType = 4;
   repeated int32 ordinals = 5;
-  ParamValue defaultValue = 6;
+  repeated ParamValue arrayValues = 6;
   repeated Validator validators = 7;
   string structType = 8;
   bool forceDefault = 9;
   bool optional = 10;
+  int32 valueType = 11;
+  string scalarValue = 12;
+  //google.protobuf.Struct udt = 13;
 }
 
 message ParamValue{
   int32 valueType = 1;
   string scalarValue = 2;
-  repeated ParamValue arrayValue = 3;
-  google.protobuf.Struct udt = 4;
+  //google.protobuf.Struct udt = 3;
 }
 
 message Validator{
-  string message =1;
+  oneof validator{
+    ArrayTypeValidator arrayTypeValidator = 1;
+    DoubleRangeValidator doubleRangeValidator = 2;
+    LengthValidator lengthValidator = 3;
+    LongRangeValidator longRangeValidator = 4;
+    PatternValidator patternValidator = 5;
+    ScalarTypeValidator scalarTypeValidator = 6;
+  }
 }
 
 message DataSourceList{
@@ -250,4 +274,38 @@ message DSConfigurationParameters{
   int32 maxIdle = 7;
   int32 maxWait = 8;
   int64 maxAge = 9;
+}
+
+message ArrayTypeValidator{}
+message DoubleRangeValidator{
+  double minimum = 1;
+  double maximum = 2;
+  bool hasMin = 3;
+  bool hasMax = 4;
+  string message = 5;
+}
+message LengthValidator{
+  int32 minimum = 1;
+  int32 maximum = 2;
+  bool hasMin = 3;
+  bool hasMax = 4;
+  string message = 5;
+}
+message LongRangeValidator{
+  int64 minimum = 1;
+  int64 maximum = 2;
+  bool hasMin = 3;
+  bool hasMax = 4;
+  string message = 5;
+}
+message PatternValidator{
+  string message = 1;
+  string pattern = 2;
+}
+message ScalarTypeValidator{}
+
+message Operation{
+  string operationName = 1;
+  string queryName = 2;
+  repeated QueryParam queryParams = 3;
 }

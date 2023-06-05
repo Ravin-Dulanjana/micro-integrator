@@ -1,13 +1,11 @@
 package org.wso2.micro.integrator.grpc.client;
 
-import com.google.gson.JsonObject;
+
 import org.apache.axiom.om.OMElement;
-import org.apache.synapse.MessageContext;
 import org.apache.synapse.aspects.AspectConfiguration;
 import org.apache.synapse.config.SynapseConfigUtils;
 import org.apache.synapse.config.SynapseConfiguration;
 import org.apache.synapse.config.xml.endpoints.EndpointSerializer;
-import org.apache.synapse.core.axis2.Axis2MessageContext;
 import org.apache.synapse.endpoints.AbstractEndpoint;
 import org.apache.synapse.endpoints.Endpoint;
 import org.json.JSONObject;
@@ -21,8 +19,10 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.wso2.carbon.inbound.endpoint.common.Constants.SUPER_TENANT_DOMAIN_NAME;
+import static org.wso2.micro.integrator.grpc.client.Constants.*;
 
 public class EndpointResourceGrpc {
+    private static final String ENDPOINT_NAME = "endpointName";
     private List<Endpoint> getSearchResults(String searchKey) {
         return SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME).getDefinedEndpoints().values().stream()
                 .filter(artifact -> artifact.getName().toLowerCase().contains(searchKey))
@@ -34,29 +34,24 @@ public class EndpointResourceGrpc {
         setGrpcResponseBody(searchResultList);
     }
 
-    private void handleTracing(String performedBy, JsonObject payload, MessageContext msgCtx,
-                               org.apache.axis2.context.MessageContext axisMsgCtx) {
-
-        JSONObject response;
-        if (payload.has(Constants.NAME)) {
-            String endpointName = payload.get(Constants.NAME).getAsString();
-            SynapseConfiguration configuration = msgCtx.getConfiguration();
+    private void handleTracing(String performedBy, String endpointName, String traceState) {
+        if (endpointName != null) {
+            SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
             Endpoint endpoint = configuration.getEndpoint(endpointName);
             if (endpoint != null) {
                 AspectConfiguration aspectConfiguration = ((AbstractEndpoint) endpoint).getDefinition().getAspectConfiguration();
                 JSONObject info = new JSONObject();
                 info.put(ENDPOINT_NAME, endpointName);
-                response = Utils.handleTracing(performedBy, Constants.AUDIT_LOG_TYPE_ENDPOINT_TRACE,
-                        Constants.ENDPOINTS, info, aspectConfiguration, endpointName,
-                        axisMsgCtx);
+                GrpcUtils.handleTracing(performedBy, Constants.AUDIT_LOG_TYPE_ENDPOINT_TRACE,
+                        Constants.ENDPOINTS, info, aspectConfiguration, endpointName, traceState);
             } else {
-                response = Utils.createJsonError("Specified endpoint ('" + endpointName + "') not found", axisMsgCtx,
-                        Constants.BAD_REQUEST);
+                GrpcUtils.createProtoError("Specified endpoint ('" + endpointName + "') not found", Constants.BAD_REQUEST);
             }
         } else {
-            response = Utils.createJsonError("Unsupported operation", axisMsgCtx, Constants.BAD_REQUEST);
+            GrpcUtils.createProtoError("Unsupported operation", Constants.BAD_REQUEST);
         }
-        Utils.setJsonPayLoad(axisMsgCtx, response);
+        //Utils.setJsonPayLoad(axisMsgCtx, response);
+        //return GRPCUtils.handleTracing();
     }
 
     private void populateEndpointList(SynapseConfiguration configuration) {
@@ -91,16 +86,16 @@ public class EndpointResourceGrpc {
     }
     private void populateEndpointData(String endpointName) {
 
-        JSONObject jsonBody = getEndpointByName(endpointName);
+        org.wso2.micro.integrator.grpc.proto.Endpoint protoEndpoint = getEndpointByName(endpointName);
 
-        if (Objects.nonNull(jsonBody)) {
+        if (Objects.nonNull(protoEndpoint)) {
             //Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
         } else {
             //axis2MessageContext.setProperty(Constants.HTTP_STATUS_CODE, Constants.NOT_FOUND);
         }
     }
 
-    private JSONObject getEndpointByName(String endpointName) {
+    private org.wso2.micro.integrator.grpc.proto.Endpoint getEndpointByName(String endpointName) {
 
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         Endpoint ep = configuration.getEndpoint(endpointName);
@@ -111,45 +106,53 @@ public class EndpointResourceGrpc {
         }
     }
 
-    private JSONObject getEndpointAsJson(Endpoint endpoint) {
+    private org.wso2.micro.integrator.grpc.proto.Endpoint getEndpointAsJson(Endpoint endpoint) {
 
         org.wso2.micro.integrator.grpc.proto.Endpoint.Builder endpointBuilder =
                 org.wso2.micro.integrator.grpc.proto.Endpoint.newBuilder();
+
         JSONObject endpointObject = endpoint.getJsonRepresentation();
+        endpointBuilder.setName(endpointObject.getString(Constants.NAME));
+        endpointBuilder.setType(endpointObject.getString(Constants.TYPE));
+        endpointBuilder.setMethod(endpointObject.getString(Constants.METHOD));
+        endpointBuilder.setUriTemplate(endpointObject.getString("uriTemplate"));
+        org.wso2.micro.integrator.grpc.proto.TimeoutState.Builder timeoutStateBuilder =
+                org.wso2.micro.integrator.grpc.proto.TimeoutState.newBuilder().addAllErrorCodes((List<Integer>)(endpointObject.getJSONObject("timeoutState").get("errorCodes"))).setRetries((Integer)(endpointObject.getJSONObject("timeoutState").get("reties")));
+        org.wso2.micro.integrator.grpc.proto.SuspendState.Builder suspendStateBuilder =
+                org.wso2.micro.integrator.grpc.proto.SuspendState.newBuilder().addAllErrorCodes((List<Integer>)(endpointObject.getJSONObject("suspendState").get("errorCodes"))).setMaxDuration((Long)(endpointObject.getJSONObject("suspendState").get("maxDuration"))).setInitialDuration((Long)(endpointObject.getJSONObject("suspendState").get("initialDuration")));
+
+        endpointBuilder.setEpAdvanced(org.wso2.micro.integrator.grpc.proto.EPAdvanced.newBuilder().setTimeoutState(timeoutStateBuilder.build()).setSuspendState(suspendStateBuilder.build()));
         OMElement synapseConfiguration = EndpointSerializer.getElementFromEndpoint(endpoint);
         endpointBuilder.setConfiguration(synapseConfiguration.toString()).setIsActive(isEndpointActive(endpoint)).setTracing(((AbstractEndpoint) endpoint).getDefinition().getAspectConfiguration().isTracingEnabled() ? Constants.ENABLED : Constants.DISABLED);
 
 
-        return endpointObject;
+        return endpointBuilder.build();
     }
 
-    private void changeEndpointStatus(String performedBy, org.apache.axis2.context.MessageContext axis2MessageContext,
-                                      SynapseConfiguration configuration, JsonObject payload) {
+    private void changeEndpointStatus(String performedBy,
+                                      SynapseConfiguration configuration, String endpointName, String status) {
 
-        String endpointName = payload.get(Constants.NAME).getAsString();
-        String status = payload.get(STATUS).getAsString();
         Endpoint ep = configuration.getEndpoint(endpointName);
         if (ep != null) {
-            JSONObject jsonResponse = new JSONObject();
             JSONObject info = new JSONObject();
             info.put(ENDPOINT_NAME, endpointName);
             if (INACTIVE_STATUS.equalsIgnoreCase(status)) {
                 ep.getContext().switchOff();
-                jsonResponse.put(Constants.MESSAGE_JSON_ATTRIBUTE, endpointName + " is switched Off");
+//                jsonResponse.put(Constants.MESSAGE_JSON_ATTRIBUTE, endpointName + " is switched Off");
                 AuditLogger.logAuditMessage(performedBy, Constants.AUDIT_LOG_TYPE_ENDPOINT,
                         Constants.AUDIT_LOG_ACTION_DISABLED, info);
             } else if (ACTIVE_STATUS.equalsIgnoreCase(status)) {
                 ep.getContext().switchOn();
-                jsonResponse.put(Constants.MESSAGE_JSON_ATTRIBUTE, endpointName + " is switched On");
+//                jsonResponse.put(Constants.MESSAGE_JSON_ATTRIBUTE, endpointName + " is switched On");
                 AuditLogger.logAuditMessage(performedBy, Constants.AUDIT_LOG_TYPE_ENDPOINT,
                         Constants.AUDIT_LOG_ACTION_ENABLE, info);
             } else {
-                jsonResponse = Utils.createJsonError("Provided state is not valid", axis2MessageContext, Constants.BAD_REQUEST);
+                GrpcUtils.createProtoError("Provided state is not valid", Constants.BAD_REQUEST);
             }
-            Utils.setJsonPayLoad(axis2MessageContext, jsonResponse);
+            //Utils.setJsonPayLoad(axis2MessageContext, jsonResponse);
         } else {
-            Utils.setJsonPayLoad(axis2MessageContext,  Utils.createJsonError("Endpoint does not exist",
-                    axis2MessageContext, Constants.NOT_FOUND));
+//            Utils.setJsonPayLoad(axis2MessageContext,  Utils.createJsonError("Endpoint does not exist",
+//                    axis2MessageContext, Constants.NOT_FOUND));
         }
     }
 
