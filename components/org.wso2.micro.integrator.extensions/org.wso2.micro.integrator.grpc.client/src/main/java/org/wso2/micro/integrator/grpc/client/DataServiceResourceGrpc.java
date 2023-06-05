@@ -6,12 +6,11 @@ import org.apache.axis2.description.AxisService;
 import org.apache.axis2.engine.AxisConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.synapse.MessageContext;
 import org.apache.synapse.config.SynapseConfigUtils;
 import org.apache.synapse.config.SynapseConfiguration;
-import org.apache.synapse.core.axis2.Axis2MessageContext;
 import org.apache.tomcat.util.modeler.OperationInfo;
-import org.json.JSONObject;
+import org.wso2.micro.integrator.dataservices.core.engine.ParamValue;
+import org.wso2.micro.integrator.dataservices.core.validation.Validator;
 import org.wso2.micro.integrator.dataservices.common.DBConstants;
 import org.wso2.micro.integrator.dataservices.core.DBUtils;
 import org.wso2.micro.integrator.dataservices.core.description.config.Config;
@@ -23,6 +22,12 @@ import org.wso2.micro.integrator.dataservices.core.engine.DataServiceSerializer;
 import org.wso2.micro.integrator.dataservices.core.engine.QueryParam;
 import org.wso2.micro.integrator.grpc.proto.DataServiceList;
 import org.wso2.micro.service.mgt.ServiceMetaData;
+import org.wso2.micro.integrator.dataservices.core.validation.standard.ArrayTypeValidator;
+import org.wso2.micro.integrator.dataservices.core.validation.standard.DoubleRangeValidator;
+import org.wso2.micro.integrator.dataservices.core.validation.standard.LengthValidator;
+import org.wso2.micro.integrator.dataservices.core.validation.standard.LongRangeValidator;
+import org.wso2.micro.integrator.dataservices.core.validation.standard.PatternValidator;
+import org.wso2.micro.integrator.dataservices.core.validation.standard.ScalarTypeValidator;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -68,7 +73,7 @@ public class DataServiceResourceGrpc {
         setGrpcResponseBody(dataServicesNames);
     }
 
-    private void populateDataServiceByName(String serviceName) {
+    private void populateDataServiceByName(String serviceName) throws Exception {
         DataService dataService = getDataServiceByName(serviceName);
 
         if (dataService != null) {
@@ -81,16 +86,15 @@ public class DataServiceResourceGrpc {
                 Map<String, Query> queries = dataService.getQueries();
                 for (Map.Entry<String, Query> stringQuery : queries.entrySet()) {
                     org.wso2.micro.integrator.grpc.proto.Query.Builder queryBuilder = org.wso2.micro.integrator.grpc.proto.Query.newBuilder();
-                    queryBuilder.setId(stringQuery.getKey()).setNamespace(stringQuery.getValue().getNamespace()).setConfigId(stringQuery.getValue().getConfigId());
+                    queryBuilder.setId(stringQuery.getKey()).setNamespace(stringQuery.getValue().getNamespace()).setDataSourceId(stringQuery.getValue().getConfigId());
                     dataServiceBuilder.addQueries(queryBuilder.build());
                 }
             }
-            dataServiceBuilder.addAllDataSources(getDataSources(dataService));
+            dataServiceBuilder.addAllDsDataSources(getDataSources(dataService));
             dataServiceBuilder.addAllResources(getResources(dataService));
-            dataServiceInfo.setResources(getResources(dataService));
-            dataServiceInfo.setOperations(getOperations(dataService));
-            dataServiceInfo.setConfiguration(DataServiceSerializer.serializeDataService(dataService, true).toString());
-            String stringPayload = new Gson().toJson(dataServiceInfo);
+            dataServiceBuilder.addAllOperations(getOperations(dataService));
+            dataServiceBuilder.setConfiguration(DataServiceSerializer.serializeDataService(dataService, true).toString());
+            org.wso2.micro.integrator.grpc.proto.DataService dataServiceProto = dataServiceBuilder.build();
             //Utils.setJsonPayLoad(axis2MessageContext, new JSONObject(stringPayload));
         }
     }
@@ -107,9 +111,9 @@ public class DataServiceResourceGrpc {
         return dataService;
     }
 
-    private ServiceMetaData getServiceMetaData(DataService dataService) {
+    private ServiceMetaData getServiceMetaData(DataService dataService) throws Exception {
         if (dataService != null) {
-            return serviceAdmin.getServiceData(dataService.getName());
+            return GrpcUtils.getServiceAdmin().getServiceData(dataService.getName());
         } else {
             return null;
         }
@@ -122,50 +126,91 @@ public class DataServiceResourceGrpc {
         for (Resource.ResourceID id : resourceIDS) {
             org.wso2.micro.integrator.grpc.proto.DataServiceResource.Builder resourceInfoBuilder = org.wso2.micro.integrator.grpc.proto.DataServiceResource.newBuilder();
             Resource resource = dataService.getResource(id);
-            resourceInfoBuilder.setResourcePath(id.getPath()).setResourceMethod(id.getMethod()).setResourceQuery(resource.getCallQuery().getQueryId()).addAllQueryParams(resource.getCallQuery().getQuery().getQueryParams());
-            resourceList.add(resourceInfo);
+            resourceInfoBuilder.setResourcePath(id.getPath()).setResourceMethod(id.getMethod()).setResourceQuery(resource.getCallQuery().getQueryId()).addAllQueryParams(getQueryParams(resource.getCallQuery().getQuery().getQueryParams()));
+            resourceList.add(resourceInfoBuilder.build());
         }
         return resourceList;
     }
 
-    private List<org.wso2.micro.integrator.grpc.proto.QueryParam> getQueryParams(Query query) {
+    private List<org.wso2.micro.integrator.grpc.proto.QueryParam> getQueryParams(List<QueryParam> queryParamList) {
 
         List<org.wso2.micro.integrator.grpc.proto.QueryParam> queryParams = new ArrayList<>();
-        List<QueryParam> queryParamList = resource.getCallQuery().getQuery().getQueryParams();
         for (QueryParam queryParam : queryParamList) {
             org.wso2.micro.integrator.grpc.proto.QueryParam.Builder queryParamBuilder = org.wso2.micro.integrator.grpc.proto.QueryParam.newBuilder();
             queryParamBuilder.setName(queryParam.getName())
                     .setSqlType(queryParam.getSqlType())
                     .setType(queryParam.getType())
                     .setParamType(queryParam.getParamType())
+                    .addAllOrdinals(queryParam.getOrdinals())
+                    .addAllValidators(getValidators(queryParam.getValidators()))
                     .setStructType(queryParam.getStructType())
-                    .setDefaultValue(org.wso2.micro.integrator.grpc.proto.ParamValue.newBuilder().setValueType(queryParam.getDefaultValue().getValueType()).setScalarValue(queryParam.getDefaultValue().getScalarValue()).addAllArrayValue(queryParam.getDefaultValue().getArrayValue())).setOrdinal(queryParam.getOrdinal()).setOptional(queryParam.isOptional()).setArray(queryParam.isArray()).setElementName(queryParam.getElementName()).setNamespace(queryParam.getNamespace()).setMinOccurs(queryParam.getMinOccurs()).setMaxOccurs(queryParam.getMaxOccurs()).setNillable(queryParam.isNillable()).setDefaultValue(queryParam.getDefaultVa);
+                    .setForceDefault(queryParam.isForceDefault())
+                    .setOptional(queryParam.isOptional())
+                    .setValueType(queryParam.getDefaultValue().getValueType())
+                    .setScalarValue(queryParam.getDefaultValue().getScalarValue())
+                    //.setUdt(queryParam.getDefaultValue().getUdt())
+                    .addAllArrayValues(getParamValues(queryParam.getDefaultValue()));
             queryParams.add(queryParamBuilder.build());
         }
         return queryParams;
     }
 
-    private List<OperationInfo> getOperations(DataService dataService) {
+    private List<org.wso2.micro.integrator.grpc.proto.ParamValue> getParamValues(ParamValue defaultValue) {
 
-        List<OperationInfo> opertionList = new ArrayList<>();
+        List<org.wso2.micro.integrator.grpc.proto.ParamValue> paramValueList = new ArrayList<>();
+        for (ParamValue paramValue : defaultValue.getArrayValue()) {
+            org.wso2.micro.integrator.grpc.proto.ParamValue.Builder paramValueBuilder = org.wso2.micro.integrator.grpc.proto.ParamValue.newBuilder();
+            paramValueBuilder.setValueType(paramValue.getValueType()).setScalarValue(paramValue.getScalarValue());
+                    //.setUdt(paramValue.getUdt())
+            paramValueList.add(paramValueBuilder.build());
+        }
+        return paramValueList;
+    }
+
+    private List<org.wso2.micro.integrator.grpc.proto.Validator> getValidators(List<Validator> validators) {
+
+        List<org.wso2.micro.integrator.grpc.proto.Validator> validatorList = new ArrayList<>();
+        for (Validator validator : validators) {
+            org.wso2.micro.integrator.grpc.proto.Validator.Builder validatorBuilder = org.wso2.micro.integrator.grpc.proto.Validator.newBuilder();
+            if(validator instanceof ArrayTypeValidator){
+                validatorBuilder.setArrayTypeValidator(org.wso2.micro.integrator.grpc.proto.ArrayTypeValidator.newBuilder().build());
+            }else if(validator instanceof DoubleRangeValidator){
+                validatorBuilder.setDoubleRangeValidator(org.wso2.micro.integrator.grpc.proto.DoubleRangeValidator.newBuilder().setMinimum(((DoubleRangeValidator) validator).getMinimum()).setMaximum(((DoubleRangeValidator) validator).getMaximum()).setHasMin(((DoubleRangeValidator) validator).isHasMin()).setHasMax(((DoubleRangeValidator) validator).isHasMax()).setMessage(((DoubleRangeValidator) validator).getMessage()).build());
+            }else if(validator instanceof LengthValidator){
+                validatorBuilder.setLengthValidator(org.wso2.micro.integrator.grpc.proto.LengthValidator.newBuilder().setMinimum(((LengthValidator) validator).getMinLength()).setMaximum(((LengthValidator) validator).getMaxLength()).setHasMin(((LengthValidator) validator).isHasMin()).setHasMax(((LengthValidator) validator).isHasMax()).setMessage(((LengthValidator) validator).getMessage()).build());
+            }else if(validator instanceof LongRangeValidator){
+                validatorBuilder.setLongRangeValidator(org.wso2.micro.integrator.grpc.proto.LongRangeValidator.newBuilder().setMinimum(((LongRangeValidator) validator).getMinimum()).setMaximum(((LongRangeValidator) validator).getMaximum()).setHasMin(((LongRangeValidator) validator).isHasMin()).setHasMax(((LongRangeValidator) validator).isHasMax()).setMessage(((LongRangeValidator) validator).getMessage()).build());
+            } else if(validator instanceof PatternValidator){
+                validatorBuilder.setPatternValidator(org.wso2.micro.integrator.grpc.proto.PatternValidator.newBuilder().setMessage(((PatternValidator) validator).getMessage()).setPattern(((PatternValidator) validator).getPattern().toString()).build());
+            } else if(validator instanceof ScalarTypeValidator){
+                validatorBuilder.setScalarTypeValidator(org.wso2.micro.integrator.grpc.proto.ScalarTypeValidator.newBuilder().build());
+            }
+            validatorList.add(validatorBuilder.build());
+        }
+        return validatorList;
+    }
+
+    private List<org.wso2.micro.integrator.grpc.proto.Operation> getOperations(DataService dataService) {
+
+        List<org.wso2.micro.integrator.grpc.proto.Operation> opertionList = new ArrayList<>();
         Set<String> operationNames = dataService.getOperationNames();
         for (String operationName : operationNames) {
-            OperationInfo operationInfo = new OperationInfo();
+            org.wso2.micro.integrator.grpc.proto.Operation.Builder operationBuilder = org.wso2.micro.integrator.grpc.proto.Operation.newBuilder();
             Operation operation = dataService.getOperation(operationName);
-            operationInfo.setOperationName(operationName);
-            operationInfo.setQueryName(operation.getCallQuery().getQueryId());
-            operationInfo.setQueryParams(operation.getCallQuery().getQuery().getQueryParams());
-            opertionList.add(operationInfo);
+            operationBuilder.setOperationName(operationName);
+            operationBuilder.setQueryName(operation.getCallQuery().getQueryId());
+            operationBuilder.addAllQueryParams(getQueryParams(operation.getCallQuery().getQuery().getQueryParams()));
+            opertionList.add(operationBuilder.build());
         }
         return opertionList;
     }
 
-    private List<org.wso2.micro.integrator.grpc.proto.DataSource> getDataSources(DataService dataService) {
+    private List<org.wso2.micro.integrator.grpc.proto.DSDataSource> getDataSources(DataService dataService) {
 
         Map<String, Config> configs = dataService.getConfigs();
-        List<org.wso2.micro.integrator.grpc.proto.DataSource> dataSources = new ArrayList<>();
+        List<org.wso2.micro.integrator.grpc.proto.DSDataSource> dataSources = new ArrayList<>();
         configs.forEach((name, config) -> {
-            org.wso2.micro.integrator.grpc.proto.DataSource.Builder dataSourceBuilder = org.wso2.micro.integrator.grpc.proto.DataSource.newBuilder();
+            org.wso2.micro.integrator.grpc.proto.DSDataSource.Builder dataSourceBuilder = org.wso2.micro.integrator.grpc.proto.DSDataSource.newBuilder();
             dataSourceBuilder.setDataSourceId(config.getConfigId()).setDataSourceType(config.getType()).putAllDataSourceProperties(config.getProperties());
             dataSources.add(dataSourceBuilder.build());
         });
