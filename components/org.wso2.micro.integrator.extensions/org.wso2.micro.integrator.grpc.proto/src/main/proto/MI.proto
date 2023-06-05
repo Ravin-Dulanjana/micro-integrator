@@ -41,6 +41,7 @@ message DataRequest {
     Connector connector = 12;
     DataServiceList dataServiceList = 13;
     DataService dataService = 14;
+    InboundEndpointList inboundEndpointList = 15;
   }
 }
 
@@ -308,4 +309,30 @@ message Operation{
   string operationName = 1;
   string queryName = 2;
   repeated QueryParam queryParams = 3;
+}
+
+message InboundEndpointList{
+  int32 count = 1;
+  repeated InboundEndpointSummary inboundEndpointsSummaries = 2;
+}
+
+message InboundEndpointSummary{
+  string protocol = 1;
+  string name = 2;
+}
+
+message InboundEndpoint{
+  string protocol = 1;
+  string name = 2;
+  string sequence = 3;
+  string error = 4;
+  string statisticsState = 5;
+  string tracing = 6;
+  string configuration = 7;
+  repeated Param params = 8;
+}
+
+message Param{
+  string name = 1;
+  string value = 2;
 }
