@@ -1,4 +1,4 @@
-package org.wso2.micro.integrator.grpc.client;
+package org.wso2.micro.integrator.initializer.dashboard.grpcClient;
 
 
 import org.apache.axiom.om.OMElement;
@@ -19,7 +19,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.wso2.carbon.inbound.endpoint.common.Constants.SUPER_TENANT_DOMAIN_NAME;
-import static org.wso2.micro.integrator.grpc.client.Constants.*;
+import static org.wso2.micro.integrator.initializer.dashboard.grpcClient.Constants.ACTIVE_STATUS;
+import static org.wso2.micro.integrator.initializer.dashboard.grpcClient.Constants.INACTIVE_STATUS;
 
 public class EndpointResourceGrpc {
     private static final String ENDPOINT_NAME = "endpointName";

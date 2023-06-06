@@ -1,22 +1,16 @@
-package org.wso2.micro.integrator.grpc.client;
+package org.wso2.micro.integrator.initializer.dashboard.grpcClient;
 
-import com.google.gson.JsonObject;
-import org.apache.axis2.AxisFault;
-import org.apache.axis2.engine.AxisConfiguration;
 import org.apache.synapse.MessageContext;
 import org.apache.synapse.config.SynapseConfigUtils;
 import org.apache.synapse.config.SynapseConfiguration;
-import org.apache.synapse.libraries.imports.SynapseImport;
 import org.apache.synapse.libraries.model.Library;
 import org.apache.synapse.libraries.model.SynapseLibrary;
-import org.json.JSONObject;
-import org.wso2.micro.core.util.AuditLogger;
 import org.wso2.micro.integrator.grpc.proto.ConnectorList;
-import org.wso2.micro.integrator.initializer.ServiceBusUtils;
-import org.wso2.micro.integrator.initializer.deployment.synapse.deployer.SynapseAppDeployer;
-import org.wso2.micro.integrator.initializer.persistence.MediationPersistenceManager;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.wso2.carbon.inbound.endpoint.common.Constants.SUPER_TENANT_DOMAIN_NAME;

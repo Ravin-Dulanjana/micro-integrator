@@ -1,4 +1,4 @@
-package org.wso2.micro.integrator.grpc.client;
+package org.wso2.micro.integrator.initializer.dashboard.grpcClient;
 
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolConfiguration;

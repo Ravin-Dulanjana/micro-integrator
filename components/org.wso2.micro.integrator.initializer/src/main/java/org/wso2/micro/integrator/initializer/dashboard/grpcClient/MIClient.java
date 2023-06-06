@@ -1,8 +1,10 @@
-package org.wso2.micro.integrator.grpc.client;
+package org.wso2.micro.integrator.initializer.dashboard.grpcClient;
 
-import io.grpc.*;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import org.wso2.micro.integrator.grpc.proto.*;
+
 import java.util.concurrent.TimeUnit;
 
 public class MIClient {
@@ -28,8 +30,6 @@ public class MIClient {
     Endpoint endpoint1 = Endpoint.newBuilder()
             .setTracing("disabled")
             .setMethod("GET")
-            .setAdvanced("{\"suspendState\":{\"errorCodes\":[],\"maxDuration\":9223372036854775807,\"initialDuration\":-1}")
-            .setTimeoutState("{\"errorCodes\":[],\"reties\":0}}")
             .setConfiguration("<endpoint xmlns=\\\"http://ws.apache.org/ns/synapse\\\" name=\\\"GrandOakEndpoint\\\"><http method=\\\"GET\\\" uri-template=\\\"http://localhost:9090/grandOak/doctors/{uri.var.doctorType}\\\"/><\\/endpoint>")
             .setUriTemplate("http://localhost:9090/grandOak/doctors/")
             .setName("GrandOakEndpoint")
@@ -38,8 +38,6 @@ public class MIClient {
     Endpoint endpoint2 = Endpoint.newBuilder()
             .setTracing("disabled")
             .setMethod("POST")
-            .setAdvanced("{\"suspendState\":{\"errorCodes\":[],\"maxDuration\":9223372036854775807,\"initialDuration\":-1}")
-            .setTimeoutState("{\"errorCodes\":[],\"reties\":0}}")
             .setConfiguration("<endpoint xmlns=\\\"http://ws.apache.org/ns/synapse\\\" name=\\\"PineValleyEndpoint\\\"><http method=\\\"POST\\\" uri-template=\\\"http://localhost:9091/pineValley/doctors\\\"/><\\/endpoint>")
             .setUriTemplate("http://localhost:9091/pineValley/doctors")
             .setName("PineValleyEndpoint")

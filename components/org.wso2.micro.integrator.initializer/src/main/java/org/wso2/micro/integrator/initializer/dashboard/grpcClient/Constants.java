@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.micro.integrator.grpc.client;
+package org.wso2.micro.integrator.initializer.dashboard.grpcClient;
 
 import org.wso2.micro.integrator.core.services.CarbonServerConfigurationService;
 

@@ -1,10 +1,9 @@
-package org.wso2.micro.integrator.grpc.client;
+package org.wso2.micro.integrator.initializer.dashboard.grpcClient;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.synapse.MessageContext;
 import org.apache.synapse.aspects.AspectConfiguration;
-import org.apache.synapse.commons.json.JsonUtil;
 import org.apache.synapse.config.SynapseConfigUtils;
 import org.apache.synapse.rest.RESTConstants;
 import org.json.JSONObject;

@@ -1,28 +1,17 @@
-package org.wso2.micro.integrator.grpc.client;
+package org.wso2.micro.integrator.initializer.dashboard.grpcClient;
 
-import org.apache.axiom.om.OMElement;
-import org.apache.axiom.soap.SOAPBody;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.synapse.MessageContext;
 import org.apache.synapse.core.axis2.Axis2MessageContext;
-import org.json.JSONObject;
 import org.wso2.micro.application.deployer.CarbonApplication;
 import org.wso2.micro.application.deployer.config.Artifact;
 import org.wso2.micro.integrator.initializer.deployment.application.deployer.CappDeployer;
-import org.wso2.micro.core.util.AuditLogger;
 
-import javax.xml.namespace.QName;
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
-
-import static org.wso2.micro.integrator.grpc.client.Constants.BAD_REQUEST;
-import static org.wso2.micro.integrator.grpc.client.Constants.NOT_FOUND;
-import static org.wso2.micro.integrator.grpc.client.Constants.SEARCH_KEY;
 
 public class CarbonAppResourceGrpc {
 

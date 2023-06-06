@@ -1,26 +1,19 @@
-package org.wso2.micro.integrator.grpc.client;
+package org.wso2.micro.integrator.initializer.dashboard.grpcClient;
 
 import org.apache.axiom.om.OMElement;
-import org.apache.axis2.description.Parameter;
-import org.apache.axis2.description.TransportInDescription;
-import org.apache.axis2.engine.AxisConfiguration;
+import org.apache.synapse.MessageContext;
 import org.apache.synapse.api.API;
+import org.apache.synapse.api.Resource;
+import org.apache.synapse.api.dispatch.DispatcherHelper;
+import org.apache.synapse.api.dispatch.URITemplateHelper;
+import org.apache.synapse.api.dispatch.URLMappingHelper;
 import org.apache.synapse.config.SynapseConfigUtils;
+import org.apache.synapse.config.SynapseConfiguration;
 import org.apache.synapse.config.xml.rest.APISerializer;
+import org.apache.synapse.core.axis2.Axis2MessageContext;
 import org.wso2.micro.integrator.grpc.proto.APIList;
 import org.wso2.micro.integrator.grpc.proto.APISummary;
-import org.apache.synapse.api.Resource;
-import org.apache.synapse.MessageContext;
-import org.apache.synapse.core.axis2.Axis2MessageContext;
-import org.apache.synapse.api.dispatch.DispatcherHelper;
-import org.apache.synapse.config.SynapseConfiguration;
-import org.apache.synapse.api.dispatch.URITemplateHelper;
-import org.wso2.micro.core.util.NetworkUtils;
-import org.apache.synapse.api.dispatch.URLMappingHelper;
 
-import java.net.MalformedURLException;
-import java.net.SocketException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
