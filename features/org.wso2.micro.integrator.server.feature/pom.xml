@@ -257,7 +257,11 @@
 <!--                                </bundleDef>-->
                                 <!-- gRPC client -->
                                 <bundleDef>
-                                    org.wso2.ei:org.wso2.micro.integrator.grpc.client:${project.version}
+                                    org.wso2.ei:org.wso2.micro.integrator.initializer:${project.version}
+                                </bundleDef>
+                                <!-- gRPC proto -->
+                                <bundleDef>
+                                    org.wso2.ei:org.wso2.micro.integrator.grpc.proto:${project.version}
                                 </bundleDef>
                                 <!--Management API-->
                                 <bundleDef>

@@ -38,7 +38,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.wso2.carbon.inbound.endpoint.internal.http.api.APIResource;
 import org.wso2.micro.core.util.NetworkUtils;
-import org.wso2.micro.integrator.grpc.client.ApiResourceGrpc;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -106,7 +105,6 @@ public class ApiResource extends APIResource {
     private void populateSearchResults(MessageContext messageContext, String searchKey) {
         List<API> searchResultList = getSearchResults(messageContext, searchKey);
         setResponseBody(searchResultList, messageContext);
-        new ApiResourceGrpc().setGrpcResponseBody(searchResultList, messageContext);
     }
 
     private void setResponseBody(Collection<API> resultList, MessageContext messageContext) {
