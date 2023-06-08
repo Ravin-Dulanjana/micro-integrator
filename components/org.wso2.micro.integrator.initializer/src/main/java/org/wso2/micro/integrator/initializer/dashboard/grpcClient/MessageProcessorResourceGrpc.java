@@ -33,13 +33,6 @@ public class MessageProcessorResourceGrpc {
     private static final String SCHEDULED_MESSAGE_FORWARDING_TYPE = "Scheduled-message-forwarding-processor";
     private static final String FAILOVER_SCHEDULED_MESSAGE_FORWARDING_TYPE = "Failover-scheduled-message-forwarding-processor";
     private static final String CUSTOM_PROCESSOR_TYPE = "Custom-message-processor";
-    //Constants for message-processor JSON object
-    private static final String TYPE_PROPERTY = "type";
-    private static final String CONTAINER_PROPERTY = "artifactContainer";
-    private static final String FILE_NAME_PROPERTY = "fileName";
-    private static final String PARAMETER_PROPERTY = "parameters";
-    private static final String MESSAGE_STORE_PROPERTY = "messageStore";
-    private static final String MESSAGE_PROCESSOR_NAME = "messageProcessorName";
 
     private List<MessageProcessor> getSearchResults(String searchKey) {
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
