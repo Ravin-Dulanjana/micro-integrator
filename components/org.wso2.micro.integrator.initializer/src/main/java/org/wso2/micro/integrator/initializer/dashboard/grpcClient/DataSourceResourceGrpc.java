@@ -82,7 +82,7 @@ public class DataSourceResourceGrpc {
                 dataSourceInformation = dataSourceBuilder.build();
             }
         } else {
-            org.wso2.micro.integrator.grpc.proto.Error error = GrpcUtils.createProtoError("datasource " + datasourceName + " does not exist", Constants.NOT_FOUND);
+            org.wso2.micro.integrator.grpc.proto.Error error = GrpcUtils.createProtoError("datasource " + datasourceName + " does not exist");
             dataSourceInformation = error;
         }
         return dataSourceInformation;

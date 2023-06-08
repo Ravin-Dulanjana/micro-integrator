@@ -46,10 +46,10 @@ public class EndpointResourceGrpc {
                 GrpcUtils.handleTracing(performedBy, Constants.AUDIT_LOG_TYPE_ENDPOINT_TRACE,
                         Constants.ENDPOINTS, info, aspectConfiguration, endpointName, traceState);
             } else {
-                GrpcUtils.createProtoError("Specified endpoint ('" + endpointName + "') not found", Constants.BAD_REQUEST);
+                GrpcUtils.createProtoError("Specified endpoint ('" + endpointName + "') not found");
             }
         } else {
-            GrpcUtils.createProtoError("Unsupported operation", Constants.BAD_REQUEST);
+            GrpcUtils.createProtoError("Unsupported operation");
         }
         //Utils.setJsonPayLoad(axisMsgCtx, response);
         //return GRPCUtils.handleTracing();
@@ -148,7 +148,7 @@ public class EndpointResourceGrpc {
                 AuditLogger.logAuditMessage(performedBy, Constants.AUDIT_LOG_TYPE_ENDPOINT,
                         Constants.AUDIT_LOG_ACTION_ENABLE, info);
             } else {
-                GrpcUtils.createProtoError("Provided state is not valid", Constants.BAD_REQUEST);
+                GrpcUtils.createProtoError("Provided state is not valid");
             }
             //Utils.setJsonPayLoad(axis2MessageContext, jsonResponse);
         } else {
