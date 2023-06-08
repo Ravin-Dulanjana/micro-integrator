@@ -45,6 +45,7 @@ message DataRequest {
     LogFileList logFileList = 16;
     LogConfigList logConfigList = 17;
     MessageProcessorsList messageProcessorsList = 18;
+    MessageStoreList messageStoreList = 19;
   }
 }
 
@@ -381,4 +382,25 @@ message MessageProcessor{
   string messageStore = 6;
   string status = 7;
   string configuration = 8;
+}
+
+message MessageStoreList{
+  int32 count = 1;
+  repeated MessageStoreSummary messageStoreSummaries = 2;
+}
+
+message MessageStoreSummary{
+  string name = 1;
+  string type = 2;
+  int32 size = 3;
+}
+
+message MessageStore{
+  string name = 1;
+  int32 storeSize = 2;
+  string container = 3;
+  string fileName = 4;
+  //map<string, string> parameters = 5;
+  string status = 6;
+  string configuration = 7;
 }
