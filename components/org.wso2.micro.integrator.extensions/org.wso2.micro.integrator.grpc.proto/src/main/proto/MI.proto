@@ -42,6 +42,8 @@ message DataRequest {
     DataServiceList dataServiceList = 13;
     DataService dataService = 14;
     InboundEndpointList inboundEndpointList = 15;
+    LogFileList logFileList = 16;
+    LogConfigList logConfigList = 17;
   }
 }
 
@@ -335,4 +337,25 @@ message InboundEndpoint{
 message Param{
   string name = 1;
   string value = 2;
+}
+
+message LogFileList{
+  int32 count = 1;
+  repeated LogFile logFiles = 2;
+}
+
+message LogFile{
+  string name = 1;
+  string size = 2;
+}
+
+message LogConfigList{
+  int32 count = 1;
+  repeated LogConfig logConfigs = 2;
+}
+
+message LogConfig{
+  string loggerName = 1;
+  string componentName = 2;
+  string level = 3;
 }
