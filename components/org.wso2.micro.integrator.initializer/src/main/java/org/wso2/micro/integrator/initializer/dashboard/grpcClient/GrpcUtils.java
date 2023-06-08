@@ -1,5 +1,6 @@
 package org.wso2.micro.integrator.initializer.dashboard.grpcClient;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.synapse.MessageContext;
@@ -7,11 +8,18 @@ import org.apache.synapse.aspects.AspectConfiguration;
 import org.apache.synapse.config.SynapseConfigUtils;
 import org.apache.synapse.rest.RESTConstants;
 import org.json.JSONObject;
+import org.ops4j.pax.logging.PaxLoggingConstants;
+import org.osgi.service.cm.Configuration;
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.wso2.micro.core.util.AuditLogger;
 import org.wso2.micro.integrator.initializer.dashboard.ArtifactUpdateListener;
+import org.wso2.micro.integrator.initializer.utils.ConfigurationHolder;
 import org.wso2.micro.service.mgt.ServiceAdmin;
 
-import java.util.Objects;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.*;
 
 import static org.wso2.carbon.inbound.endpoint.common.Constants.SUPER_TENANT_DOMAIN_NAME;
 
@@ -19,12 +27,12 @@ public class GrpcUtils {
 
     private static final Log LOG = LogFactory.getLog(GrpcUtils.class);
 
-    static org.wso2.micro.integrator.grpc.proto.Error createProtoError(String message, String statusCode) {
+    static org.wso2.micro.integrator.grpc.proto.Error createProtoError(String message) {
         LOG.error(message);
-        return createResponse(message, statusCode);
+        return createResponse(message);
     }
 
-    private static org.wso2.micro.integrator.grpc.proto.Error createResponse(String message, String statusCode) {
+    private static org.wso2.micro.integrator.grpc.proto.Error createResponse(String message) {
         org.wso2.micro.integrator.grpc.proto.Error error = org.wso2.micro.integrator.grpc.proto.Error.newBuilder()
                 .setMessage(message).build();
         //axis2MessageContext.setProperty(Constants.HTTP_STATUS_CODE, statusCode);
@@ -78,5 +86,102 @@ public class GrpcUtils {
         }
         LOG.info(msg);
         return responseBuilder.build();
+    }
+
+    public static String getCarbonLogsPath() {
+
+        String carbonLogsPath = System.getProperty("carbon.logs.path");
+        if (carbonLogsPath == null) {
+            carbonLogsPath = System.getenv("CARBON_LOGS");
+            if (carbonLogsPath == null) {
+                return getCarbonHome() + File.separator + "repository" + File.separator + "logs";
+            }
+        }
+        return carbonLogsPath;
+    }
+
+    public static List<LogFileInfo> getLogFileInfoList() {
+
+        String folderPath = GrpcUtils.getCarbonLogsPath();
+        List<LogFileInfo> logFilesList = new ArrayList<>();
+        LogFileInfo logFileInfo;
+
+        File folder = new File(folderPath);
+        File[] listOfFiles = folder.listFiles();
+
+        if (listOfFiles == null || listOfFiles.length == 0) {
+            // folder.listFiles can return a null, in that case return a default log info
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Could not find any log file in " + folderPath);
+            }
+            return getDefaultLogInfoList();
+        }
+        for (File file : listOfFiles) {
+            String filename = file.getName();
+            if (!filename.endsWith(".lck")) {
+                String filePath = GrpcUtils.getCarbonLogsPath() + File.separator + filename;
+                File logfile = new File(filePath);
+                logFileInfo = new LogFileInfo(filename, getFileSize(logfile));
+                logFilesList.add(logFileInfo);
+            }
+        }
+        return logFilesList;
+    }
+
+    private static String getFileSize(File file) {
+
+        long bytes = file.length();
+        int unit = 1024;
+        if (bytes < unit) {
+            return bytes + " B";
+        }
+        int exp = (int) (Math.log(bytes) / Math.log(unit));
+        char pre = "KMGTPE".charAt(exp - 1);
+        return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
+    }
+
+    private static List<LogFileInfo> getDefaultLogInfoList() {
+
+        List<LogFileInfo> defaultLogFileInfoList = new ArrayList<>();
+        defaultLogFileInfoList.add(new LogFileInfo("NO_LOG_FILES", "---"));
+        return defaultLogFileInfoList;
+    }
+
+    public static String getProperty(File srcFile, String key) throws IOException {
+
+        String value;
+        try (FileInputStream fis = new FileInputStream(srcFile)) {
+            Properties properties = new Properties();
+            properties.load(fis);
+            value = properties.getProperty(key);
+        } catch (IOException e) {
+            throw new IOException("Error occurred while reading the input stream");
+        }
+        return value;
+    }
+
+    public static void updateLoggingConfiguration() throws IOException {
+
+        ConfigurationAdmin configurationAdmin = ConfigurationHolder.getInstance().getConfigAdminService();
+        Configuration configuration =
+                configurationAdmin.getConfiguration(Constants.PAX_LOGGING_CONFIGURATION_PID, "?");
+        Dictionary properties = new Hashtable<>();
+        properties.put(Constants.SERVICE_PID, PaxLoggingConstants.LOGGING_CONFIGURATION_PID);
+        Hashtable paxLoggingProperties = getPaxLoggingProperties();
+        paxLoggingProperties.forEach(properties::put);
+        configuration.update(properties);
+    }
+
+    private static Hashtable getPaxLoggingProperties() throws IOException {
+        String paxPropertiesFileLocation = System.getProperty("org.ops4j.pax.logging.property.file");
+        if (StringUtils.isNotEmpty(paxPropertiesFileLocation)) {
+            File file = new File(paxPropertiesFileLocation);
+            if (file.exists()) {
+                Properties properties = new Properties();
+                properties.load(new FileInputStream(file));
+                return properties;
+            }
+        }
+        return new Hashtable();
     }
 }
