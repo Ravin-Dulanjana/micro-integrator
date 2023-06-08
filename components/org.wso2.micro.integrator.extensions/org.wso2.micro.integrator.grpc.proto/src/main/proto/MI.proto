@@ -44,6 +44,7 @@ message DataRequest {
     InboundEndpointList inboundEndpointList = 15;
     LogFileList logFileList = 16;
     LogConfigList logConfigList = 17;
+    MessageProcessorsList messageProcessorsList = 18;
   }
 }
 
@@ -358,4 +359,26 @@ message LogConfig{
   string loggerName = 1;
   string componentName = 2;
   string level = 3;
+}
+
+message MessageProcessorsList{
+  int32 count = 1;
+  repeated MessageProcessorSummary messageProcessorSummaries = 2;
+}
+
+message MessageProcessorSummary{
+  string name = 1;
+  string type = 2;
+  string status = 3;
+}
+
+message MessageProcessor{
+  string name = 1;
+  string type = 2;
+  string container = 3;
+  string fileName = 4;
+  //map<string, string> parameters = 5;
+  string messageStore = 6;
+  string status = 7;
+  string configuration = 8;
 }
