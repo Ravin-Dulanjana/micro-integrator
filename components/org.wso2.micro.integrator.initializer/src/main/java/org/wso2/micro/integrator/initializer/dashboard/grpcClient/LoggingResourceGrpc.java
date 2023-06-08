@@ -14,9 +14,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.wso2.micro.integrator.initializer.dashboard.grpcClient.Constants.ROOT_LOGGER;
+
 public class LoggingResourceGrpc {
 
-    /*private PropertiesConfiguration config;
+    private PropertiesConfiguration config;
     private PropertiesConfigurationLayout layout;
     private static final Log log = LogFactory.getLog(LoggingResourceGrpc.class);
     private static final String FILE_PATH = System.getProperty(ServerConstants.CARBON_CONFIG_DIR_PATH) + File.separator
@@ -28,6 +30,13 @@ public class LoggingResourceGrpc {
     private static final String LOGGER_NAME_SUFFIX = ".name";
     private static final String LOGGER_CLASS = "loggerClass";
     private static final String LOGGERS_PROPERTY = "loggers";
+
+    private JSONObject createInfoJSON(String loggerName, String logLevel){
+        JSONObject info = new JSONObject();
+        info.put(Constants.LOGGER_NAME, loggerName);
+        info.put(Constants.LOGGING_LEVEL, logLevel);
+        return info;
+    }
     private void updateLoggerData(String performedBy, String loggerName, String loggerClass, String logLevel) {
 
         try {
@@ -39,32 +48,33 @@ public class LoggingResourceGrpc {
             applyConfigs();
             org.wso2.micro.integrator.grpc.proto.Message message = org.wso2.micro.integrator.grpc.proto.Message.newBuilder()
                     .setMessage(getSuccessMsg(loggerClass, loggerName, logLevel)).build();
-            AuditLogger.logAuditMessage(performedBy, Constants.AUDIT_LOG_TYPE_LOG_LEVEL,
-                    Constants.AUDIT_LOG_ACTION_CREATED, info);
+            JSONObject info = createInfoJSON(loggerName, logLevel);
+            AuditLogger.logAuditMessage(performedBy, Constants.AUDIT_LOG_TYPE_LOG_LEVEL, Constants.AUDIT_LOG_ACTION_CREATED, info);
 
         } catch (ConfigurationException | IOException exception) {
             createProtoError("Exception while updating logger data ", exception);
         }
     }
 
-    private JSONObject updateLoggerData(String performedBy, JSONObject info, String loggerName, String logLevel) {
+    private org.wso2.micro.integrator.grpc.proto.Message updateLoggerData(String performedBy, String loggerName, String logLevel) {
 
+        org.wso2.micro.integrator.grpc.proto.Message.Builder messageBuilder = org.wso2.micro.integrator.grpc.proto.Message.newBuilder();
         try {
             loadConfigs();
-            if (loggerName.equals(Constants.ROOT_LOGGER)) {
+            if (loggerName.equals(ROOT_LOGGER)) {
                 config.setProperty(loggerName + LOGGER_LEVEL_SUFFIX, logLevel);
                 applyConfigs();
-                jsonBody.put(Constants.MESSAGE, getSuccessMsg("", loggerName, logLevel));
-                AuditLogger.logAuditMessage(performedBy, Constants.AUDIT_LOG_TYPE_ROOT_LOG_LEVEL,
-                        Constants.AUDIT_LOG_ACTION_UPDATED, info);
+                messageBuilder.setMessage(getSuccessMsg("", loggerName, logLevel));
+                JSONObject info = createInfoJSON(loggerName, logLevel);
+                AuditLogger.logAuditMessage(performedBy, Constants.AUDIT_LOG_TYPE_ROOT_LOG_LEVEL, Constants.AUDIT_LOG_ACTION_UPDATED, info);
 
             } else {
                 if (isLoggerExist(loggerName)) {
                     config.setProperty(LOGGER_PREFIX + loggerName + LOGGER_LEVEL_SUFFIX, logLevel);
-                    AuditLogger.logAuditMessage(performedBy, Constants.AUDIT_LOG_TYPE_LOG_LEVEL,
-                            Constants.AUDIT_LOG_ACTION_UPDATED, info);
+                    JSONObject info = createInfoJSON(loggerName, logLevel);
+                    AuditLogger.logAuditMessage(performedBy, Constants.AUDIT_LOG_TYPE_LOG_LEVEL, Constants.AUDIT_LOG_ACTION_UPDATED, info);
                     applyConfigs();
-                    jsonBody.put(Constants.MESSAGE, getSuccessMsg("", loggerName, logLevel));
+                    messageBuilder.setMessage(getSuccessMsg("", loggerName, logLevel));
                 } else {
                     createProtoError("Specified logger ('" + loggerName + "') not found", "");
                 }
@@ -72,7 +82,7 @@ public class LoggingResourceGrpc {
         } catch (ConfigurationException | IOException exception) {
             createProtoError("Exception while updating logger data ", exception);
         }
-        return jsonBody;
+        return messageBuilder.build();
     }
 
     private String getSuccessMsg(String loggerClass, String loggerName, String logLevel) {
@@ -103,7 +113,7 @@ public class LoggingResourceGrpc {
         String logLevel = null;
         String componentName = "";
         try {
-            if (loggerName.equals(Constants.ROOT_LOGGER)) {
+            if (loggerName.equals(ROOT_LOGGER)) {
                 logLevel = GrpcUtils.getProperty(LOG_PROP_FILE, loggerName + LOGGER_LEVEL_SUFFIX);
             } else {
                 componentName = GrpcUtils.getProperty(LOG_PROP_FILE, LOGGER_PREFIX + loggerName + LOGGER_NAME_SUFFIX);
@@ -179,5 +189,5 @@ public class LoggingResourceGrpc {
     private void applyConfigs() throws IOException, ConfigurationException {
         layout.save(new FileWriter(FILE_PATH, false));
         GrpcUtils.updateLoggingConfiguration();
-    }*/
+    }
 }
