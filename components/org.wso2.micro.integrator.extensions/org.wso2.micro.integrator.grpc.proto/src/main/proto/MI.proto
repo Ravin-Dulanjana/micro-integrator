@@ -46,6 +46,7 @@ message DataRequest {
     LogConfigList logConfigList = 17;
     MessageProcessorsList messageProcessorsList = 18;
     MessageStoreList messageStoreList = 19;
+    ProxyServiceList proxyServiceList = 20;
   }
 }
 
@@ -403,4 +404,31 @@ message MessageStore{
   //map<string, string> parameters = 5;
   string status = 6;
   string configuration = 7;
+}
+
+message ProxyServiceList{
+  int32 count = 1;
+  repeated ProxyServiceSummary proxyServiceSummaries = 2;
+}
+
+message ProxyServiceSummary{
+  string name = 1;
+  string wsdl11 = 2;
+  string wsdl20 = 3;
+}
+
+message ProxyService{
+  string name = 1;
+  string wsdl11 = 2;
+  string wsdl20 = 3;
+  string stats = 4;
+  string tracing = 5;
+  string configuration = 6;
+  repeated string eprs = 7;
+  bool isRunning = 8;
+}
+
+message ProxySwitch{
+  string name = 1;
+  string status = 2;
 }
