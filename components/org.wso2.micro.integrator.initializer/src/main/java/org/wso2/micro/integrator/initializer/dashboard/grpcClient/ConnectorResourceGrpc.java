@@ -38,8 +38,7 @@ public class ConnectorResourceGrpc {
         org.wso2.micro.integrator.grpc.proto.ConnectorList connectorList = connectorListBuilder.build();
         //Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
     }
-    private void populateConnectorData(org.apache.axis2.context.MessageContext axis2MessageContext,
-                                       SynapseConfiguration synapseConfiguration, String connectorName) {
+    private void populateConnectorData(SynapseConfiguration synapseConfiguration, String connectorName) {
 
         Map<String, Library> libraries = synapseConfiguration.getSynapseLibraries();
 

@@ -130,8 +130,7 @@ public class EndpointResourceGrpc {
         return endpointBuilder.build();
     }
 
-    private void changeEndpointStatus(String performedBy,
-                                      SynapseConfiguration configuration, String endpointName, String status) {
+    private void changeEndpointStatus(String performedBy, SynapseConfiguration configuration, String endpointName, String status) {
 
         Endpoint ep = configuration.getEndpoint(endpointName);
         if (ep != null) {

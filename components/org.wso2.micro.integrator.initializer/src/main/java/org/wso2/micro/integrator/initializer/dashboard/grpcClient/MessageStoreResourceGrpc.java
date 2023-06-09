@@ -11,15 +11,11 @@ import org.apache.synapse.message.store.impl.jms.JmsStore;
 import org.apache.synapse.message.store.impl.memory.InMemoryStore;
 import org.apache.synapse.message.store.impl.rabbitmq.RabbitMQStore;
 import org.apache.synapse.message.store.impl.resequencer.ResequenceMessageStore;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.wso2.carbon.inbound.endpoint.common.Constants.SUPER_TENANT_DOMAIN_NAME;
-import static org.wso2.micro.integrator.initializer.dashboard.grpcClient.Constants.PASSWORD;
-import static org.wso2.micro.integrator.initializer.dashboard.grpcClient.Constants.PASSWORD_MASKED_VALUE;
 
 public class MessageStoreResourceGrpc {
 
@@ -30,12 +26,7 @@ public class MessageStoreResourceGrpc {
     private static final String RABBITMQSTORE_TYPE = "rabbitmq-message-store";
     private static final String RESEQUENCEMESSAGESTORE_TYPE = "resequence-message-store";
     private static final String CUSTOMSTORE_TYPE = "custom-message-store";
-    //Constants for message-processor JSON object
-    private static final String STORE_TYPE_PROPERTY = "type";
-    private static final String CONTAINER_ATTRIBUTE = "container";
-    private static final String FILE_NAME_ATTRIBUTE = "file";
-    private static final String PROPERTIES_ATTRIBUTE = "properties";
-    private static final String STORE_SIZE_ATTRIBUTE = "size";
+
     private List<MessageStore> getSearchResults(String searchKey) {
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         return configuration.getMessageStores().values().stream()
@@ -65,9 +56,7 @@ public class MessageStoreResourceGrpc {
         setGrpcResponseBody(storeList);
     }
 
-    private void populateMessageStoreData(org.apache.axis2.context.MessageContext axis2MessageContext,
-                                          SynapseConfiguration synapseConfiguration,
-                                          String messageStoreName) {
+    private void populateMessageStoreData(SynapseConfiguration synapseConfiguration, String messageStoreName) {
         MessageStore messageStore = synapseConfiguration.getMessageStore(messageStoreName);
         if (Objects.nonNull(messageStore)) {
             org.wso2.micro.integrator.grpc.proto.MessageStore messageStorePB = getMessageStoreAsProtoBuf(messageStore);

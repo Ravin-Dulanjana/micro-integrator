@@ -45,9 +45,7 @@ public class DataSourceResourceGrpc {
         return dataSourceListBuilder.build();
     }
 
-    private Object getDatasourceInformation(org.apache.axis2.context.MessageContext axis2MessageContext,
-                                                DataSourceRepository dataSourceRepository,
-                                                String datasourceName) {
+    private Object getDatasourceInformation(DataSourceRepository dataSourceRepository, String datasourceName) {
         Object dataSourceInformation = null;
         CarbonDataSource dataSource = dataSourceRepository.getDataSource(datasourceName);
         if (Objects.nonNull(dataSource)) {
