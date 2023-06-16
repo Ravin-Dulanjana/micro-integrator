@@ -257,8 +257,11 @@
 <!--                                </bundleDef>-->
                                 <!-- gRPC client -->
                                 <bundleDef>
-                                    org.wso2.ei:org.wso2.micro.integrator.initializer:${project.version}
+                                    com.google.protobuf:protobuf-java:3.23.2
                                 </bundleDef>
+<!--                                <bundleDef>-->
+<!--                                    com.google.protobuf:protobuf-javalite:3.23.2-->
+<!--                                </bundleDef>-->
                                 <!-- gRPC proto -->
                                 <bundleDef>
                                     org.wso2.ei:org.wso2.micro.integrator.grpc.proto:${project.version}
@@ -293,8 +296,8 @@
                                 <bundleDef>com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${fasterxml.jackson.version}</bundleDef>
                                 <bundleDef>org.wso2.orbit.org.apache.commons:commons-lang3:${commons-lang3.orbit.version}</bundleDef>
                                 <bundleDef>org.wso2.ei:javax.cache.wso2:${project.version}</bundleDef>
-                                <bundleDef>org.wso2.orbit.io.grpc:grpc-context:${grpc-context.orbit.version}</bundleDef>
-                                <bundleDef>org.wso2.orbit.io.opencensus:opencensus:${opencensus.orbit.version}</bundleDef>
+<!--                                <bundleDef>org.wso2.orbit.io.grpc:grpc-context:${grpc-context.orbit.version}</bundleDef>-->
+<!--                                <bundleDef>org.wso2.orbit.io.opencensus:opencensus:${opencensus.orbit.version}</bundleDef>-->
                             </bundles>
 
                             <importFeatures>

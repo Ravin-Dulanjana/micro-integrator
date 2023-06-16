@@ -37,7 +37,6 @@ import org.wso2.micro.integrator.dataservices.core.DBDeployer;
 import org.wso2.micro.integrator.initializer.StartupFinalizer;
 import org.wso2.micro.integrator.initializer.dashboard.HeartBeatComponent;
 import org.wso2.micro.integrator.initializer.dashboard.grpcClient.MIClient;
-import org.wso2.micro.integrator.initializer.dashboard.grpcClient.TheDummyClass;
 import org.wso2.micro.integrator.initializer.deployment.application.deployer.CappDeployer;
 import org.wso2.micro.integrator.initializer.deployment.synapse.deployer.FileRegistryResourceDeployer;
 import org.wso2.micro.integrator.initializer.deployment.synapse.deployer.SynapseAppDeployer;
@@ -80,9 +79,8 @@ public class AppDeployerServiceComponent {
             HeartBeatComponent.invokeHeartbeatExecutorService();
         }
 
-        TheDummyClass theDummyClass = new TheDummyClass();
         // Initialize the deployment of grpc MI client
-//        MIClient miclient = new MIClient();
+        MIClient miclient = new MIClient();
 
         // Finalize server startup
         startupFinalizer = new StartupFinalizer(configCtx, ctxt.getBundleContext());

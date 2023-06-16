@@ -432,3 +432,13 @@ message ProxySwitch{
   string name = 1;
   string status = 2;
 }
+
+message RoleList{
+  int32 count = 1;
+  repeated string roles = 2;
+}
+
+message Role{
+  string roleName = 1;
+  repeated string users = 2;
+}
