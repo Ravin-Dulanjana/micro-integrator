@@ -1,7 +1,6 @@
 package org.wso2.micro.integrator.initializer.dashboard.grpcClient;
 
 import org.apache.axiom.om.OMElement;
-import org.apache.synapse.MessageContext;
 import org.apache.synapse.api.API;
 import org.apache.synapse.api.Resource;
 import org.apache.synapse.api.dispatch.DispatcherHelper;
@@ -10,7 +9,6 @@ import org.apache.synapse.api.dispatch.URLMappingHelper;
 import org.apache.synapse.config.SynapseConfigUtils;
 import org.apache.synapse.config.SynapseConfiguration;
 import org.apache.synapse.config.xml.rest.APISerializer;
-import org.apache.synapse.core.axis2.Axis2MessageContext;
 import org.wso2.micro.integrator.grpc.proto.APIList;
 import org.wso2.micro.integrator.grpc.proto.APISummary;
 
@@ -27,18 +25,28 @@ public class ApiResourceGrpc {
     private static final String URL_VERSION_TYPE = "url";
     private String serverContext = "";  // base server url
 
-    private void populateSearchResults(MessageContext messageContext, String searchKey) {
+    public static APIList populateSearchResults(String searchKey) {
         List<API> searchResultList = getSearchResults(searchKey);
-        setGrpcResponseBody(searchResultList, messageContext);
+        return setGrpcResponseBody(searchResultList);
     }
-    private List<API> getSearchResults(String searchKey) {
+    private static List<API> getSearchResults(String searchKey) {
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         return configuration.getAPIs().stream()
                 .filter(artifact -> artifact.getAPIName().toLowerCase().contains(searchKey))
                 .collect(Collectors.toList());
     }
 
-    public void setGrpcResponseBody(Collection<API> resultList, MessageContext messageContext) {
+    public static APIList populateApiList() {
+
+        SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
+
+        Collection<API> apis = configuration.getAPIs();
+
+        return setGrpcResponseBody(apis);
+
+    }
+
+    private static APIList setGrpcResponseBody(Collection<API> resultList) {
 
         APIList.Builder apiListBuilder = APIList.newBuilder();
         apiListBuilder.setCount(resultList.size());
@@ -49,32 +57,32 @@ public class ApiResourceGrpc {
                     Constants.DISABLED);
             apiListBuilder.addApiSummaries(apiSummaryBuilder.build());
         }
-        APIList apiList = apiListBuilder.build();
+        return apiListBuilder.build();
         //Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
     }
 
-    public void populateGrpcApiData(MessageContext messageContext, String apiName) {
+    public static org.wso2.micro.integrator.grpc.proto.API populateGrpcApiData(String apiName) {
 
-        org.apache.axis2.context.MessageContext axis2MessageContext =
-                ((Axis2MessageContext) messageContext).getAxis2MessageContext();
-
-        org.wso2.micro.integrator.grpc.proto.API apiProtoBuf = getGrpcApiByName(messageContext, apiName);
-
+        org.wso2.micro.integrator.grpc.proto.API apiProtoBuf = getGrpcApiByName(apiName);
+        return apiProtoBuf;
+        /*
+        Have not handled the case where apiProtoBuf is null. Need to handle it.
         if (Objects.nonNull(apiProtoBuf)) {
-            //Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
+            Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
         } else {
             axis2MessageContext.setProperty(Constants.HTTP_STATUS_CODE, Constants.NOT_FOUND);
         }
+        */
     }
 
-    private org.wso2.micro.integrator.grpc.proto.API getGrpcApiByName(MessageContext messageContext, String apiName) {
+    private static org.wso2.micro.integrator.grpc.proto.API getGrpcApiByName(String apiName) {
 
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         API api = configuration.getAPI(apiName);
-        return convertApiToProtoBuff(api, messageContext);
+        return convertApiToProtoBuff(api);
     }
 
-    private org.wso2.micro.integrator.grpc.proto.API convertApiToProtoBuff(API api, MessageContext messageContext) {
+    private static org.wso2.micro.integrator.grpc.proto.API convertApiToProtoBuff(API api) {
 
         if (Objects.isNull(api)) {
             return null;
