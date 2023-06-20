@@ -24,15 +24,15 @@ import static org.wso2.micro.integrator.initializer.dashboard.grpcClient.Constan
 
 public class EndpointResourceGrpc {
     private static final String ENDPOINT_NAME = "endpointName";
-    private List<Endpoint> getSearchResults(String searchKey) {
+    private static List<Endpoint> getSearchResults(String searchKey) {
         return SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME).getDefinedEndpoints().values().stream()
                 .filter(artifact -> artifact.getName().toLowerCase().contains(searchKey))
                 .collect(Collectors.toList());
     }
 
-    private void populateSearchResults(String searchKey) {
+    public static org.wso2.micro.integrator.grpc.proto.EndpointList populateSearchResults(String searchKey) {
         List<Endpoint> searchResultList = getSearchResults(searchKey);
-        setGrpcResponseBody(searchResultList);
+        return setGrpcResponseBody(searchResultList);
     }
 
     private void handleTracing(String performedBy, String endpointName, String traceState) {
@@ -55,14 +55,14 @@ public class EndpointResourceGrpc {
         //return GRPCUtils.handleTracing();
     }
 
-    private void populateEndpointList(SynapseConfiguration configuration) {
+    public static org.wso2.micro.integrator.grpc.proto.EndpointList populateEndpointList() {
 
-        Map<String, Endpoint> namedEndpointMap = configuration.getDefinedEndpoints();
+        Map<String, Endpoint> namedEndpointMap = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME).getDefinedEndpoints();
         Collection<Endpoint> namedEndpointCollection = namedEndpointMap.values();
-        setGrpcResponseBody(namedEndpointCollection);
+        return setGrpcResponseBody(namedEndpointCollection);
     }
 
-    private void setGrpcResponseBody(Collection<Endpoint> namedEndpointCollection) {
+    private static org.wso2.micro.integrator.grpc.proto.EndpointList setGrpcResponseBody(Collection<Endpoint> namedEndpointCollection) {
 
         org.wso2.micro.integrator.grpc.proto.EndpointList.Builder endpointListBuilder =
                 org.wso2.micro.integrator.grpc.proto.EndpointList.newBuilder().setCount(namedEndpointCollection.size());
@@ -83,20 +83,24 @@ public class EndpointResourceGrpc {
             endpointSummaryBuilder.setIsActive(isEndpointActive(ep));
             endpointListBuilder.addEndPointSummaries(endpointSummaryBuilder.build());
         }
+        return endpointListBuilder.build();
         //Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
     }
-    private void populateEndpointData(String endpointName) {
+    public static org.wso2.micro.integrator.grpc.proto.Endpoint populateEndpointData(String endpointName) {
 
         org.wso2.micro.integrator.grpc.proto.Endpoint protoEndpoint = getEndpointByName(endpointName);
-
+        return protoEndpoint;
+        /*
+        Have not handled the case where protoEndpoint is null. Need to handle it.
         if (Objects.nonNull(protoEndpoint)) {
-            //Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
+            Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
         } else {
-            //axis2MessageContext.setProperty(Constants.HTTP_STATUS_CODE, Constants.NOT_FOUND);
+            axis2MessageContext.setProperty(Constants.HTTP_STATUS_CODE, Constants.NOT_FOUND);
         }
+        */
     }
 
-    private org.wso2.micro.integrator.grpc.proto.Endpoint getEndpointByName(String endpointName) {
+    private static org.wso2.micro.integrator.grpc.proto.Endpoint getEndpointByName(String endpointName) {
 
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         Endpoint ep = configuration.getEndpoint(endpointName);
@@ -107,7 +111,7 @@ public class EndpointResourceGrpc {
         }
     }
 
-    private org.wso2.micro.integrator.grpc.proto.Endpoint getEndpointAsJson(Endpoint endpoint) {
+    private static org.wso2.micro.integrator.grpc.proto.Endpoint getEndpointAsJson(Endpoint endpoint) {
 
         org.wso2.micro.integrator.grpc.proto.Endpoint.Builder endpointBuilder =
                 org.wso2.micro.integrator.grpc.proto.Endpoint.newBuilder();
@@ -125,7 +129,6 @@ public class EndpointResourceGrpc {
         endpointBuilder.setEpAdvanced(org.wso2.micro.integrator.grpc.proto.EPAdvanced.newBuilder().setTimeoutState(timeoutStateBuilder.build()).setSuspendState(suspendStateBuilder.build()));
         OMElement synapseConfiguration = EndpointSerializer.getElementFromEndpoint(endpoint);
         endpointBuilder.setConfiguration(synapseConfiguration.toString()).setIsActive(isEndpointActive(endpoint)).setTracing(((AbstractEndpoint) endpoint).getDefinition().getAspectConfiguration().isTracingEnabled() ? Constants.ENABLED : Constants.DISABLED);
-
 
         return endpointBuilder.build();
     }
@@ -156,7 +159,7 @@ public class EndpointResourceGrpc {
         }
     }
 
-    private Boolean isEndpointActive(Endpoint endpoint) {
+    private static Boolean isEndpointActive(Endpoint endpoint) {
         // 1 represents the endpoint active state
         return endpoint.getContext().isState(1);
     }

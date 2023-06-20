@@ -102,46 +102,20 @@ public class MIClient {
                     requestObserver.onNext(DataRequest.newBuilder().setServerInfo(serverInfo).build());
                 } else if (responseType == 1) {
                     if (response.equals("")) {
-                        requestObserver.onNext(DataRequest.newBuilder().setApiList(apiList).build());
+                        requestObserver.onNext(DataRequest.newBuilder().setApiList(ApiResourceGrpc.populateApiList()).build());
                     } else {
-                        int count = 0;
-                        APIList.Builder responseApiList = APIList.newBuilder();
-                        for (APISummary apisummary : apiList.getApiSummariesList()){
-                            if (apisummary.getName().toLowerCase().contains(response.toLowerCase())){
-                                count++;
-                                responseApiList.addApiSummaries(apisummary);
-                            }
-                        }
-                        responseApiList.setCount(count);
-                        requestObserver.onNext(DataRequest.newBuilder().setApiList(responseApiList.build()).build());
+                        requestObserver.onNext(DataRequest.newBuilder().setApiList(ApiResourceGrpc.populateSearchResults(response)).build());
                     }
                 } else if (responseType == 2) {
-                    requestObserver.onNext(DataRequest.newBuilder().setApi(api).build());
+                    requestObserver.onNext(DataRequest.newBuilder().setApi(ApiResourceGrpc.populateGrpcApiData(response)).build());
                 }  else if (responseType == 3) {
                     if (response.equals("")) {
-                        requestObserver.onNext(DataRequest.newBuilder().setEndpointList(endpointList).build());
+                        requestObserver.onNext(DataRequest.newBuilder().setEndpointList(EndpointResourceGrpc.populateEndpointList()).build());
                     } else {
-                        int count = 0;
-                        EndpointList.Builder responseEndpointList = EndpointList.newBuilder();
-                        for (EndpointSummary endpointsummary : endpointList.getEndPointSummariesList()){
-                            if (endpointsummary.getName().toLowerCase().contains(response.toLowerCase())){
-                                count++;
-                                responseEndpointList.addEndPointSummaries(endpointsummary);
-                            }
-                        }
-                        responseEndpointList.setCount(count);
-                        requestObserver.onNext(DataRequest.newBuilder().setEndpointList(responseEndpointList.build()).build());
+                        requestObserver.onNext(DataRequest.newBuilder().setEndpointList(EndpointResourceGrpc.populateSearchResults(response)).build());
                     }
                 } else if (responseType == 4) {
-                    if(response.equals(endpoint1.getName())){
-                        requestObserver.onNext(DataRequest.newBuilder().setEndpoint(endpoint1).build());
-                    } else if(response.equals(endpoint2.getName())){
-                        requestObserver.onNext(DataRequest.newBuilder().setEndpoint(endpoint2).build());
-                    } else {
-                        System.out.println("Wrong Endpoint\nResponse: " + response);
-                    }
-                } else {
-                    System.out.println("Invalid Request from Dashboard");
+                    requestObserver.onNext(DataRequest.newBuilder().setEndpoint(EndpointResourceGrpc.populateEndpointData(response)).build());
                 }
             }
 
