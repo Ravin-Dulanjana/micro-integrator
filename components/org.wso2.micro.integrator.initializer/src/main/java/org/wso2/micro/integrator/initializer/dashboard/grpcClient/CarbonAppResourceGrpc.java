@@ -15,31 +15,27 @@ import java.util.stream.Collectors;
 
 public class CarbonAppResourceGrpc {
 
-    private static final Log log = LogFactory.getLog(CarbonAppResourceGrpc.class);
-    private static final String MULTIPART_FORMDATA_DATA_TYPE = "multipart/form-data";
-    private static final String CAPP_NAME = "name";
-    private static final String CAPP_FILE_NAME = "cAppFileName";
-
-    public void populateSearchResults(String searchKey) {
+    public static org.wso2.micro.integrator.grpc.proto.CarbonAppList populateSearchResults(String searchKey) {
 
         List<CarbonApplication> appList
                 = CappDeployer.getCarbonApps().stream().filter(capp -> capp.getAppName().toLowerCase().contains(searchKey))
                 .collect(Collectors.toList());
         List<CarbonApplication> faultyAppList = CappDeployer.getFaultyCAppObjects().stream()
                 .filter(capp -> capp.getAppName().toLowerCase().contains(searchKey)).collect(Collectors.toList());
-        setGrpcResponseBody(appList, faultyAppList);
+        return setGrpcResponseBody(appList, faultyAppList);
     }
 
-    private void setGrpcResponseBody(Collection<CarbonApplication> appList, Collection<CarbonApplication> faultyAppList) {
+    private static org.wso2.micro.integrator.grpc.proto.CarbonAppList setGrpcResponseBody(Collection<CarbonApplication> appList, Collection<CarbonApplication> faultyAppList) {
 
+        org.wso2.micro.integrator.grpc.proto.CarbonAppList.Builder carbonAppListBuilder =
+                org.wso2.micro.integrator.grpc.proto.CarbonAppList.newBuilder();
+        // attributes of carbonAppListBuilder becomes null if appList or faultyAppList becomes null. Must handle this in a better way.
         if (appList == null) {
-            org.wso2.micro.integrator.grpc.proto.Error error = org.wso2.micro.integrator.grpc.proto.Error.newBuilder().setMessage("Error while getting the Carbon Application List").build();
+            //org.wso2.micro.integrator.grpc.proto.Error error = org.wso2.micro.integrator.grpc.proto.Error.newBuilder().setMessage("Error while getting the Carbon Application List").build();
         } else if (faultyAppList == null) {
-            org.wso2.micro.integrator.grpc.proto.Error error = org.wso2.micro.integrator.grpc.proto.Error.newBuilder().setMessage("Error while getting the Carbon Faulty Application List").build();
+           // org.wso2.micro.integrator.grpc.proto.Error error = org.wso2.micro.integrator.grpc.proto.Error.newBuilder().setMessage("Error while getting the Carbon Faulty Application List").build();
         } else {
-            org.wso2.micro.integrator.grpc.proto.CarbonAppList.Builder carbonAppListBuilder =
-                    org.wso2.micro.integrator.grpc.proto.CarbonAppList.newBuilder()
-                            .setActiveCount(appList.size()).setFaultyCount(faultyAppList.size()).setTotalCount(appList.size() + faultyAppList.size());
+            carbonAppListBuilder.setActiveCount(appList.size()).setFaultyCount(faultyAppList.size()).setTotalCount(appList.size() + faultyAppList.size());
             for (CarbonApplication app : appList) {
                 org.wso2.micro.integrator.grpc.proto.CarbonApp appProtoBuff = convertCarbonAppToProtoBuff(app);
                 carbonAppListBuilder.addActiveList(appProtoBuff);
@@ -49,32 +45,31 @@ public class CarbonAppResourceGrpc {
                 carbonAppListBuilder.addFaultyList(appProtoBuff);
             }
         }
+        return carbonAppListBuilder.build();
         //Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
     }
 
-    public void populateCarbonAppList() {
+    public static org.wso2.micro.integrator.grpc.proto.CarbonAppList populateCarbonAppList() {
 
-        List<CarbonApplication> appList
-                = CappDeployer.getCarbonApps();
-
+        List<CarbonApplication> appList = CappDeployer.getCarbonApps();
         List<CarbonApplication> faultyAppList = CappDeployer.getFaultyCAppObjects();
-        setGrpcResponseBody(appList, faultyAppList);
+        return setGrpcResponseBody(appList, faultyAppList);
     }
-    public void populateGrpcCarbonAppData(MessageContext messageContext, String carbonAppName) {
-
-        org.apache.axis2.context.MessageContext axis2MessageContext =
-                ((Axis2MessageContext) messageContext).getAxis2MessageContext();
+    public static org.wso2.micro.integrator.grpc.proto.CarbonApp populateGrpcCarbonAppData(String carbonAppName) {
 
         org.wso2.micro.integrator.grpc.proto.CarbonApp carbonAppProto = getGrpcCarbonAppByName(carbonAppName);
-
+         return carbonAppProto;
+        /*
+        Have not handled the case where carbonAppProto is null. Need to handle it.
         if (Objects.nonNull(carbonAppProto)) {
-            //Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
+            Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
         } else {
             axis2MessageContext.setProperty(Constants.HTTP_STATUS_CODE, Constants.NOT_FOUND);
         }
+        */
     }
 
-    private org.wso2.micro.integrator.grpc.proto.CarbonApp getGrpcCarbonAppByName(String carbonAppName) {
+    private static org.wso2.micro.integrator.grpc.proto.CarbonApp getGrpcCarbonAppByName(String carbonAppName) {
 
         List<CarbonApplication> appList
                 = CappDeployer.getCarbonApps();
@@ -87,7 +82,7 @@ public class CarbonAppResourceGrpc {
         return null;
     }
 
-    private org.wso2.micro.integrator.grpc.proto.CarbonApp convertCarbonAppToProtoBuff(CarbonApplication carbonApp) {
+    private static org.wso2.micro.integrator.grpc.proto.CarbonApp convertCarbonAppToProtoBuff(CarbonApplication carbonApp) {
 
         if (Objects.isNull(carbonApp)) {
             return null;
