@@ -18,7 +18,7 @@ public class InboundEndpointResourceGrpc {
 
     private static final String INBOUND_ENDPOINT_NAME = "inboundEndpointName";
 
-    private List<InboundEndpoint> getSearchResults (String searchKey) {
+    private static List<InboundEndpoint> getSearchResults(String searchKey) {
 
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         return configuration.getInboundEndpoints().stream()
@@ -26,20 +26,20 @@ public class InboundEndpointResourceGrpc {
                 .collect(Collectors.toList());
     }
 
-    private void populateSearchResults(String searchKey) {
+    public static org.wso2.micro.integrator.grpc.proto.InboundEndpointList populateSearchResults(String searchKey) {
 
         List<InboundEndpoint> resultsList = getSearchResults(searchKey);
-        setResponseBody(resultsList);
+        return setResponseBody(resultsList);
     }
 
-    private void populateInboundEndpointList(MessageContext messageContext) {
+    public static org.wso2.micro.integrator.grpc.proto.InboundEndpointList populateInboundEndpointList() {
 
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         Collection<InboundEndpoint> inboundEndpoints = configuration.getInboundEndpoints();
-        setResponseBody(inboundEndpoints);
+        return setResponseBody(inboundEndpoints);
     }
 
-    private void setResponseBody(Collection<InboundEndpoint> inboundEndpointCollection) {
+    private static org.wso2.micro.integrator.grpc.proto.InboundEndpointList setResponseBody(Collection<InboundEndpoint> inboundEndpointCollection) {
 
         org.wso2.micro.integrator.grpc.proto.InboundEndpointList.Builder inboundEndpointListBuilder =
                 org.wso2.micro.integrator.grpc.proto.InboundEndpointList.newBuilder().setCount(inboundEndpointCollection.size());
@@ -52,29 +52,32 @@ public class InboundEndpointResourceGrpc {
 
             inboundEndpointListBuilder.addInboundEndpointsSummaries(inboundEndpointSummaryBuilder.build());
         }
-        // build the response and send
+        return inboundEndpointListBuilder.build();
         //Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
     }
 
-    private void populateInboundEndpointData(String inboundEndpointName) {
+    public static org.wso2.micro.integrator.grpc.proto.InboundEndpoint populateInboundEndpointData(String inboundEndpointName) {
 
         org.wso2.micro.integrator.grpc.proto.InboundEndpoint inboundEndpoint = getInboundEndpointByName(inboundEndpointName);
-
+        return inboundEndpoint;
+        /*
+        Have not handled the case where inboundEndpoint is null. Need to handle it.
         if (Objects.nonNull(inboundEndpoint)) {
             //Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
         } else {
             //axis2MessageContext.setProperty(Constants.HTTP_STATUS_CODE, Constants.NOT_FOUND);
         }
+        */
     }
 
-    private org.wso2.micro.integrator.grpc.proto.InboundEndpoint getInboundEndpointByName(String inboundEndpointName) {
+    private static org.wso2.micro.integrator.grpc.proto.InboundEndpoint getInboundEndpointByName(String inboundEndpointName) {
 
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         InboundEndpoint ep = configuration.getInboundEndpoint(inboundEndpointName);
         return convertInboundEndpointToProtoBuf(ep);
     }
 
-    private org.wso2.micro.integrator.grpc.proto.InboundEndpoint convertInboundEndpointToProtoBuf(InboundEndpoint inboundEndpoint) {
+    private static org.wso2.micro.integrator.grpc.proto.InboundEndpoint convertInboundEndpointToProtoBuf(InboundEndpoint inboundEndpoint) {
 
         if (Objects.isNull(inboundEndpoint)) {
             return null;
