@@ -11,6 +11,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.synapse.transport.passthru.util.RelayConstants;
 import org.apache.synapse.transport.passthru.util.StreamingOnRequestDataSource;
+import org.wso2.micro.integrator.grpc.proto.Message;
 
 import javax.activation.DataHandler;
 import javax.mail.util.ByteArrayDataSource;
@@ -24,25 +25,25 @@ import java.util.stream.Collectors;
 public class LogFilesResourceGrpc {
 
     private static final Log log = LogFactory.getLog(LogFilesResourceGrpc.class);
-    private void populateLogFileInfo() {
+    public static org.wso2.micro.integrator.grpc.proto.LogFileList populateLogFileInfo() {
         List<LogFileInfo> logFileInfoList = GrpcUtils.getLogFileInfoList();
-        setResponseBody(logFileInfoList);
+        return setResponseBody(logFileInfoList);
     }
 
-    private List<LogFileInfo> getSearchResults(String searchKey) {
+    private static List<LogFileInfo> getSearchResults(String searchKey) {
 
         return GrpcUtils.getLogFileInfoList().stream()
                 .filter(resource -> resource.getLogName().toLowerCase().contains(searchKey))
                 .collect(Collectors.toList());
     }
 
-    private void populateSearchResults(String searchKey) {
+    public static org.wso2.micro.integrator.grpc.proto.LogFileList populateSearchResults(String searchKey) {
 
         List<LogFileInfo> searchResultList = getSearchResults(searchKey);
-        setResponseBody(searchResultList);
+        return setResponseBody(searchResultList);
     }
 
-    private void setResponseBody(Collection<LogFileInfo> logFileInfoList) {
+    private static org.wso2.micro.integrator.grpc.proto.LogFileList setResponseBody(Collection<LogFileInfo> logFileInfoList) {
 
         org.wso2.micro.integrator.grpc.proto.LogFileList.Builder logFileListBuilder =
                 org.wso2.micro.integrator.grpc.proto.LogFileList.newBuilder().setCount(logFileInfoList.size());
@@ -54,12 +55,13 @@ public class LogFilesResourceGrpc {
             logFileBuilder.setSize(logFileInfo.getFileSize());
             logFileListBuilder.addLogFiles(logFileBuilder.build());
         }
-        //build and send the LogFileList
+        return logFileListBuilder.build();
 //        Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
 //        axis2MessageContext.removeProperty(NO_ENTITY_BODY);
     }
 
-    private void populateFileContent(String pathParameter) {
+    // not finalized(need to check after proper implementation)
+    public static Message populateFileContent(String pathParameter) {
 
         DataHandler dataHandler = downloadArchivedLogFiles(pathParameter);
         if (dataHandler != null) {
@@ -89,9 +91,10 @@ public class LogFilesResourceGrpc {
         } else {
 //            sendFaultResponse(axis2MessageContext);
         }
+        return Message.newBuilder().setMessage("File " + pathParameter + " downloaded").build();
     }
 
-    private DataHandler downloadArchivedLogFiles(String logFile) {
+    private static DataHandler downloadArchivedLogFiles(String logFile) {
 
         ByteArrayDataSource bytArrayDS;
         Path logFilePath = Paths.get(GrpcUtils.getCarbonLogsPath(), logFile);
