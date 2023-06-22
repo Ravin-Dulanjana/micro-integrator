@@ -27,47 +27,50 @@ public class MessageStoreResourceGrpc {
     private static final String RESEQUENCEMESSAGESTORE_TYPE = "resequence-message-store";
     private static final String CUSTOMSTORE_TYPE = "custom-message-store";
 
-    private List<MessageStore> getSearchResults(String searchKey) {
+    private static List<MessageStore> getSearchResults(String searchKey) {
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         return configuration.getMessageStores().values().stream()
                 .filter(artifact -> artifact.getName().toLowerCase().contains(searchKey))
                 .collect(Collectors.toList());
     }
 
-    private void populateSearchResults(String searchKey) {
+    public static org.wso2.micro.integrator.grpc.proto.MessageStoreList populateSearchResults(String searchKey) {
 
         List<MessageStore> searchResultList = getSearchResults(searchKey);
-        setGrpcResponseBody(searchResultList);
+        return setGrpcResponseBody(searchResultList);
     }
 
-    private void setGrpcResponseBody(Collection<MessageStore> storeList) {
+    private static org.wso2.micro.integrator.grpc.proto.MessageStoreList setGrpcResponseBody(Collection<MessageStore> storeList) {
 
         org.wso2.micro.integrator.grpc.proto.MessageStoreList.Builder messageStoreListBuilder = org.wso2.micro.integrator.grpc.proto.MessageStoreList.newBuilder().setCount(storeList.size());
 
         for (MessageStore store : storeList) {
             messageStoreListBuilder.addMessageStoreSummaries(getProtoMessageStore(store));
         }
-        //Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
+        return messageStoreListBuilder.build();
     }
 
-    private void populateMessageStoreList(SynapseConfiguration synapseConfiguration) {
-        Map<String, MessageStore> storeMap = synapseConfiguration.getMessageStores();
+    public static org.wso2.micro.integrator.grpc.proto.MessageStoreList populateMessageStoreList() {
+        Map<String, MessageStore> storeMap = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME).getMessageStores();
         Collection<MessageStore> storeList = storeMap.values();
-        setGrpcResponseBody(storeList);
+        return setGrpcResponseBody(storeList);
     }
 
-    private void populateMessageStoreData(SynapseConfiguration synapseConfiguration, String messageStoreName) {
-        MessageStore messageStore = synapseConfiguration.getMessageStore(messageStoreName);
+    public static org.wso2.micro.integrator.grpc.proto.MessageStore populateMessageStoreData(String messageStoreName) {
+        MessageStore messageStore = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME).getMessageStore(messageStoreName);
+        return getMessageStoreAsProtoBuf(messageStore);
+        /*
+        Have not handled the case where messageStore is null. Need to handle it.
         if (Objects.nonNull(messageStore)) {
             org.wso2.micro.integrator.grpc.proto.MessageStore messageStorePB = getMessageStoreAsProtoBuf(messageStore);
-            //send message processor data
         } else {
             LOG.warn("Message store " + messageStoreName + " does not exist");
             GrpcUtils.createProtoError("Specified message store ('" + messageStoreName + "') not found");
         }
+        */
     }
 
-    private org.wso2.micro.integrator.grpc.proto.MessageStoreSummary getProtoMessageStore(MessageStore messageStore) {
+    private static org.wso2.micro.integrator.grpc.proto.MessageStoreSummary getProtoMessageStore(MessageStore messageStore) {
         org.wso2.micro.integrator.grpc.proto.MessageStoreSummary.Builder messageStoreSummaryBuilder = org.wso2.micro.integrator.grpc.proto.MessageStoreSummary.newBuilder();
         messageStoreSummaryBuilder.setName(messageStore.getName());
         messageStoreSummaryBuilder.setType(getStoreType(messageStore));
@@ -75,7 +78,7 @@ public class MessageStoreResourceGrpc {
         return messageStoreSummaryBuilder.build();
     }
 
-    private String getStoreType(MessageStore messageStore) {
+    private static String getStoreType(MessageStore messageStore) {
 
         if (messageStore instanceof ResequenceMessageStore) {
             return RESEQUENCEMESSAGESTORE_TYPE;
@@ -92,7 +95,7 @@ public class MessageStoreResourceGrpc {
         }
     }
 
-    private org.wso2.micro.integrator.grpc.proto.MessageStore getMessageStoreAsProtoBuf(MessageStore messageStore) {
+    private static org.wso2.micro.integrator.grpc.proto.MessageStore getMessageStoreAsProtoBuf(MessageStore messageStore) {
         org.wso2.micro.integrator.grpc.proto.MessageStore.Builder messageStoreBuilder = org.wso2.micro.integrator.grpc.proto.MessageStore.newBuilder();
         messageStoreBuilder.setName(messageStore.getName());
         messageStoreBuilder.setContainer(messageStore.getArtifactContainerName());

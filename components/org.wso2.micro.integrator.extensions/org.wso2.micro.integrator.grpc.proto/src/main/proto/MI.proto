@@ -34,7 +34,8 @@ message DataResponse {
     MESSAGEPROCESSORSLIST = 17;
     MESSAGEPROCESSOR = 18;
     MESSAGESTORELIST = 19;
-
+    MESSAGESTORE =20;
+    PROXYSERVICELIST = 21;
   }
   ResponseType responseType = 1;
   oneof responses{
@@ -66,6 +67,7 @@ message DataRequest {
     MessageProcessorsList messageProcessorsList = 18;
     MessageProcessor messageProcessor = 22; //change the order later
     MessageStoreList messageStoreList = 19;
+    MessageStore messageStore = 23; //change the order later
     ProxyServiceList proxyServiceList = 20;
   }
 }

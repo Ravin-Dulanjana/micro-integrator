@@ -153,6 +153,16 @@ public class MIClient {
                 } else if (responseType == 18) {
                     String response = dataResponse.getResponse();
                     requestObserver.onNext(DataRequest.newBuilder().setMessageProcessor(MessageProcessorResourceGrpc.populateMessageProcessorData(response)).build());
+                }else if (responseType == 19) {
+                    String response = dataResponse.getResponse();
+                    if (response.equals("")) {
+                        requestObserver.onNext(DataRequest.newBuilder().setMessageStoreList(MessageStoreResourceGrpc.populateMessageStoreList()).build());
+                    } else {
+                        requestObserver.onNext(DataRequest.newBuilder().setMessageStoreList(MessageStoreResourceGrpc.populateSearchResults(response)).build());
+                    }
+                } else if (responseType == 20) {
+                    String response = dataResponse.getResponse();
+                    requestObserver.onNext(DataRequest.newBuilder().setMessageStore(MessageStoreResourceGrpc.populateMessageStoreData(response)).build());
                 }
             }
 
