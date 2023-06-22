@@ -29,22 +29,20 @@ public class ProxyServiceResourceGrpc {
     private static Log LOG = LogFactory.getLog(ProxyServiceResourceGrpc.class);
     private static final String PROXY_NAME = "proxyName";
     private static ServiceAdmin serviceAdmin = null;
-    private static final String WSDL11 = "wsdl1_1";
-    private static final String WSDL20 = "wsdl2_0";
 
-    private List<ProxyService> getSearchResults(String searchKey) {
+    private static List<ProxyService> getSearchResults(String searchKey) {
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         return configuration.getProxyServices().stream()
                 .filter(artifact -> artifact.getName().toLowerCase().contains(searchKey))
                 .collect(Collectors.toList());
     }
 
-    private void populateSearchResults(String searchKey) {
+    public static org.wso2.micro.integrator.grpc.proto.ProxyServiceList populateSearchResults(String searchKey) {
         List<ProxyService> searchResultList = getSearchResults(searchKey);
-        setGrpcResponseBody(searchResultList);
+        return setGrpcResponseBody(searchResultList);
     }
 
-    private void setGrpcResponseBody(Collection<ProxyService> proxyServices) {
+    public static org.wso2.micro.integrator.grpc.proto.ProxyServiceList setGrpcResponseBody(Collection<ProxyService> proxyServices) {
         org.wso2.micro.integrator.grpc.proto.ProxyServiceList.Builder proxyServiceListBuilder =
                 org.wso2.micro.integrator.grpc.proto.ProxyServiceList.newBuilder().setCount(proxyServices.size());
         for (ProxyService proxyService : proxyServices) {
@@ -61,7 +59,7 @@ public class ProxyServiceResourceGrpc {
             }
             proxyServiceListBuilder.addProxyServiceSummaries(proxyServiceSummaryBuilder.build());
         }
-        //Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
+        return proxyServiceListBuilder.build();
     }
 
     private void handleTracing(String performedBy, String proxyName, String traceState){
@@ -85,32 +83,35 @@ public class ProxyServiceResourceGrpc {
         //return GRPCUtils.handleTracing();
     }
 
-    private void populateProxyServiceList() {
+    public static org.wso2.micro.integrator.grpc.proto.ProxyServiceList populateProxyServiceList() {
 
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         Collection<ProxyService> proxyServices = configuration.getProxyServices();
-        setGrpcResponseBody(proxyServices);
+        return setGrpcResponseBody(proxyServices);
     }
 
-    private void populateProxyServiceData(String proxyServiceName) {
+    public static org.wso2.micro.integrator.grpc.proto.ProxyService populateProxyServiceData(String proxyServiceName) {
 
         org.wso2.micro.integrator.grpc.proto.ProxyService proxyServicePB = getProxyServiceByName(proxyServiceName);
-
+        return proxyServicePB;
+        /*
+        Have not handled the case where proxyServicePB is null. Need to handle it.
         if (Objects.nonNull(proxyServicePB)) {
             //Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
         } else {
             //axis2MessageContext.setProperty(Constants.HTTP_STATUS_CODE, Constants.NOT_FOUND);
         }
+        */
     }
 
-    private org.wso2.micro.integrator.grpc.proto.ProxyService getProxyServiceByName(String proxyServiceName) {
+    private static org.wso2.micro.integrator.grpc.proto.ProxyService getProxyServiceByName(String proxyServiceName) {
 
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         ProxyService proxyService = configuration.getProxyService(proxyServiceName);
         return convertProxyServiceToProtoBuf(proxyService);
     }
 
-    private org.wso2.micro.integrator.grpc.proto.ProxyService convertProxyServiceToProtoBuf(ProxyService proxyService) {
+    private static org.wso2.micro.integrator.grpc.proto.ProxyService convertProxyServiceToProtoBuf(ProxyService proxyService) {
 
         if (Objects.isNull(proxyService)) {
             return null;

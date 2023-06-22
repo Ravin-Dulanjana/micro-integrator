@@ -153,7 +153,7 @@ public class MIClient {
                 } else if (responseType == 18) {
                     String response = dataResponse.getResponse();
                     requestObserver.onNext(DataRequest.newBuilder().setMessageProcessor(MessageProcessorResourceGrpc.populateMessageProcessorData(response)).build());
-                }else if (responseType == 19) {
+                } else if (responseType == 19) {
                     String response = dataResponse.getResponse();
                     if (response.equals("")) {
                         requestObserver.onNext(DataRequest.newBuilder().setMessageStoreList(MessageStoreResourceGrpc.populateMessageStoreList()).build());
@@ -163,6 +163,16 @@ public class MIClient {
                 } else if (responseType == 20) {
                     String response = dataResponse.getResponse();
                     requestObserver.onNext(DataRequest.newBuilder().setMessageStore(MessageStoreResourceGrpc.populateMessageStoreData(response)).build());
+                } else if (responseType == 21) {
+                    String response = dataResponse.getResponse();
+                    if (response.equals("")) {
+                        requestObserver.onNext(DataRequest.newBuilder().setProxyServiceList(ProxyServiceResourceGrpc.populateProxyServiceList()).build());
+                    } else {
+                        requestObserver.onNext(DataRequest.newBuilder().setProxyServiceList(ProxyServiceResourceGrpc.populateSearchResults(response)).build());
+                    }
+                } else if (responseType == 22) {
+                    String response = dataResponse.getResponse();
+                    requestObserver.onNext(DataRequest.newBuilder().setProxyService(ProxyServiceResourceGrpc.populateProxyServiceData(response)).build());
                 }
             }
 
