@@ -31,19 +31,24 @@ public class DataServiceResourceGrpc {
 
     private static final Log log = LogFactory.getLog(DataServiceResourceGrpc.class);
 
-    private List<String> getSearchResults(String searchKey) throws AxisFault {
+    private static List<String> getSearchResults(String searchKey) throws AxisFault {
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         AxisConfiguration axisConfiguration = configuration.getAxisConfiguration();
         return Arrays.stream(DBUtils.getAvailableDS(axisConfiguration))
                 .filter(serviceName -> serviceName.toLowerCase().contains(searchKey)).collect(Collectors.toList());
     }
 
-    private void populateSearchResults(String searchKey) throws Exception {
-        List<String> resultsList = getSearchResults(searchKey);
-        setGrpcResponseBody(resultsList);
+    public static org.wso2.micro.integrator.grpc.proto.DataServiceList populateSearchResults(String searchKey) {
+        List<String> resultsList = null;
+        try {
+            resultsList = getSearchResults(searchKey);
+            return setGrpcResponseBody(resultsList);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private void setGrpcResponseBody(List<String> dataServicesNames) throws Exception {
+    private static org.wso2.micro.integrator.grpc.proto.DataServiceList setGrpcResponseBody(List<String> dataServicesNames) throws Exception {
 
         DataServiceList.Builder dataServicesListBuilder = DataServiceList.newBuilder().setCount(dataServicesNames.size());
 
@@ -56,22 +61,26 @@ public class DataServiceResourceGrpc {
             }
             dataServicesListBuilder.addDataServicesSummaries(dataServiceSummary.build());
         }
-        org.wso2.micro.integrator.grpc.proto.DataServiceList dataServiceList = dataServicesListBuilder.build();
+         return dataServicesListBuilder.build();
         //Utils.setJsonPayLoad(axis2MessageContext, new JSONObject(stringPayload));
     }
-    private void populateDataServiceList() throws Exception {
+    public static org.wso2.micro.integrator.grpc.proto.DataServiceList populateDataServiceList() {
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         AxisConfiguration axisConfiguration = configuration.getAxisConfiguration();
-        List<String> dataServicesNames = Arrays.stream(DBUtils.getAvailableDS(axisConfiguration)).collect(Collectors.toList());
-        setGrpcResponseBody(dataServicesNames);
+        List<String> dataServicesNames = null;
+        try {
+            dataServicesNames = Arrays.stream(DBUtils.getAvailableDS(axisConfiguration)).collect(Collectors.toList());
+            return setGrpcResponseBody(dataServicesNames);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private void populateDataServiceByName(String serviceName) throws Exception {
+    public static org.wso2.micro.integrator.grpc.proto.DataService populateDataServiceByName(String serviceName) {
         DataService dataService = getDataServiceByName(serviceName);
-
+        org.wso2.micro.integrator.grpc.proto.DataService.Builder dataServiceBuilder = org.wso2.micro.integrator.grpc.proto.DataService.newBuilder();
         if (dataService != null) {
             ServiceMetaData serviceMetaData = getServiceMetaData(dataService);
-            org.wso2.micro.integrator.grpc.proto.DataService.Builder dataServiceBuilder = org.wso2.micro.integrator.grpc.proto.DataService.newBuilder();
 
             if (serviceMetaData != null) {
                 dataServiceBuilder.setServiceName(serviceMetaData.getName()).setWsdl11(serviceMetaData.getWsdlURLs()[0]).setWsdl10(serviceMetaData.getWsdlURLs()[1]).setSwaggerUrl(serviceMetaData.getSwaggerUrl()).setServiceDescription(serviceMetaData.getDescription()).setServiceGroupName(serviceMetaData.getServiceGroupName());
@@ -87,12 +96,13 @@ public class DataServiceResourceGrpc {
             dataServiceBuilder.addAllResources(getResources(dataService));
             dataServiceBuilder.addAllOperations(getOperations(dataService));
             dataServiceBuilder.setConfiguration(DataServiceSerializer.serializeDataService(dataService, true).toString());
-            org.wso2.micro.integrator.grpc.proto.DataService dataServiceProto = dataServiceBuilder.build();
+
             //Utils.setJsonPayLoad(axis2MessageContext, new JSONObject(stringPayload));
         }
+        return dataServiceBuilder.build();
     }
 
-    private DataService getDataServiceByName(String serviceName) {
+    private static DataService getDataServiceByName(String serviceName) {
         AxisService axisService = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME).
                 getAxisConfiguration().getServiceForActivation(serviceName);
         DataService dataService = null;
@@ -104,15 +114,19 @@ public class DataServiceResourceGrpc {
         return dataService;
     }
 
-    private ServiceMetaData getServiceMetaData(DataService dataService) throws Exception {
+    private static ServiceMetaData getServiceMetaData(DataService dataService) {
         if (dataService != null) {
-            return GrpcUtils.getServiceAdmin().getServiceData(dataService.getName());
+            try {
+                return GrpcUtils.getServiceAdmin().getServiceData(dataService.getName());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         } else {
             return null;
         }
     }
 
-    private List<org.wso2.micro.integrator.grpc.proto.DataServiceResource> getResources(DataService dataService) {
+    private static List<org.wso2.micro.integrator.grpc.proto.DataServiceResource> getResources(DataService dataService) {
 
         Set<Resource.ResourceID> resourceIDS = dataService.getResourceIds();
         List<org.wso2.micro.integrator.grpc.proto.DataServiceResource> resourceList = new ArrayList<>();
@@ -125,7 +139,7 @@ public class DataServiceResourceGrpc {
         return resourceList;
     }
 
-    private List<org.wso2.micro.integrator.grpc.proto.QueryParam> getQueryParams(List<QueryParam> queryParamList) {
+    private static List<org.wso2.micro.integrator.grpc.proto.QueryParam> getQueryParams(List<QueryParam> queryParamList) {
 
         List<org.wso2.micro.integrator.grpc.proto.QueryParam> queryParams = new ArrayList<>();
         for (QueryParam queryParam : queryParamList) {
@@ -148,7 +162,7 @@ public class DataServiceResourceGrpc {
         return queryParams;
     }
 
-    private List<org.wso2.micro.integrator.grpc.proto.ParamValue> getParamValues(ParamValue defaultValue) {
+    private static List<org.wso2.micro.integrator.grpc.proto.ParamValue> getParamValues(ParamValue defaultValue) {
 
         List<org.wso2.micro.integrator.grpc.proto.ParamValue> paramValueList = new ArrayList<>();
         for (ParamValue paramValue : defaultValue.getArrayValue()) {
@@ -160,7 +174,7 @@ public class DataServiceResourceGrpc {
         return paramValueList;
     }
 
-    private List<org.wso2.micro.integrator.grpc.proto.Validator> getValidators(List<Validator> validators) {
+    private static List<org.wso2.micro.integrator.grpc.proto.Validator> getValidators(List<Validator> validators) {
 
         List<org.wso2.micro.integrator.grpc.proto.Validator> validatorList = new ArrayList<>();
         for (Validator validator : validators) {
@@ -183,7 +197,7 @@ public class DataServiceResourceGrpc {
         return validatorList;
     }
 
-    private List<org.wso2.micro.integrator.grpc.proto.Operation> getOperations(DataService dataService) {
+    private static List<org.wso2.micro.integrator.grpc.proto.Operation> getOperations(DataService dataService) {
 
         List<org.wso2.micro.integrator.grpc.proto.Operation> opertionList = new ArrayList<>();
         Set<String> operationNames = dataService.getOperationNames();
@@ -198,7 +212,7 @@ public class DataServiceResourceGrpc {
         return opertionList;
     }
 
-    private List<org.wso2.micro.integrator.grpc.proto.DSDataSource> getDataSources(DataService dataService) {
+    private static List<org.wso2.micro.integrator.grpc.proto.DSDataSource> getDataSources(DataService dataService) {
 
         Map<String, Config> configs = dataService.getConfigs();
         List<org.wso2.micro.integrator.grpc.proto.DSDataSource> dataSources = new ArrayList<>();
