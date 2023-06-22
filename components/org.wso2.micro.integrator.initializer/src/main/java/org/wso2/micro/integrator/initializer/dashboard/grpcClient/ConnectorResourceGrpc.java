@@ -17,43 +17,44 @@ import static org.wso2.carbon.inbound.endpoint.common.Constants.SUPER_TENANT_DOM
 
 public class ConnectorResourceGrpc {
 
-    private List<Library> getSearchResults(String searchKey){
+    private static List<Library> getSearchResults(String searchKey){
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         return configuration.getSynapseLibraries().values().stream()
                 .filter(artifact -> artifact.getFileName().toLowerCase().contains(searchKey))
                 .collect(Collectors.toList());
     }
 
-    private void populateSearchResults(String searchKey) {
+    public static org.wso2.micro.integrator.grpc.proto.ConnectorList populateSearchResults(String searchKey) {
         List<Library> searchResultList = getSearchResults(searchKey);
-        setGrpcResponseBody(searchResultList);
+        return setGrpcResponseBody(searchResultList);
     }
 
-    private void setGrpcResponseBody(Collection<Library> libraryList) {
+    private static org.wso2.micro.integrator.grpc.proto.ConnectorList setGrpcResponseBody(Collection<Library> libraryList) {
         ConnectorList.Builder connectorListBuilder = ConnectorList.newBuilder();
         connectorListBuilder.setCount(libraryList.size());
         for (Library library : libraryList) {
             addToConnectorList(connectorListBuilder, (SynapseLibrary) library);
         }
-        org.wso2.micro.integrator.grpc.proto.ConnectorList connectorList = connectorListBuilder.build();
+        return connectorListBuilder.build();
         //Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
     }
-    private void populateConnectorData(SynapseConfiguration synapseConfiguration, String connectorName) {
+    public static org.wso2.micro.integrator.grpc.proto.Connector populateConnectorData(String connectorName) {
 
-        Map<String, Library> libraries = synapseConfiguration.getSynapseLibraries();
+        Map<String, Library> libraries = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME).getSynapseLibraries();
 
         for (Map.Entry<String, Library> entry : libraries.entrySet()) {
             if (((SynapseLibrary)entry.getValue()).getName().equals(connectorName)) {
                 SynapseLibrary connector = (SynapseLibrary)entry.getValue();
                 if (Objects.nonNull(connector)) {
-                    org.wso2.micro.integrator.grpc.proto.Connector protoBufConnector = getConnectorAsProtoBuff(connector);
+                   return getConnectorAsProtoBuff(connector);
                     //Utils.setJsonPayLoad(axis2MessageContext, getConnectorAsJson(connector));
                 }
             }
         }
+        return null;
     }
 
-    private org.wso2.micro.integrator.grpc.proto.Connector getConnectorAsProtoBuff(SynapseLibrary connector) {
+    private static org.wso2.micro.integrator.grpc.proto.Connector getConnectorAsProtoBuff(SynapseLibrary connector) {
         return org.wso2.micro.integrator.grpc.proto.Connector.newBuilder()
                 .setName(connector.getName())
                 .setPackage(connector.getPackage())
@@ -62,14 +63,13 @@ public class ConnectorResourceGrpc {
                 .build();
     }
 
-    private void populateConnectorList(MessageContext messageContext,
-                                       SynapseConfiguration synapseConfiguration) {
-        Map<String, Library> libraryMap = synapseConfiguration.getSynapseLibraries();
+    public static org.wso2.micro.integrator.grpc.proto.ConnectorList populateConnectorList() {
+        Map<String, Library> libraryMap = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME).getSynapseLibraries();
         Collection<Library> libraryList = libraryMap.values();
-        setGrpcResponseBody(libraryList);
+        return setGrpcResponseBody(libraryList);
     }
 
-    private void addToConnectorList(ConnectorList.Builder connectorListBuilder, SynapseLibrary library) {
+    private static void addToConnectorList(ConnectorList.Builder connectorListBuilder, SynapseLibrary library) {
 
         org.wso2.micro.integrator.grpc.proto.Connector connector = org.wso2.micro.integrator.grpc.proto.Connector.newBuilder()
                 .setName(library.getName())
@@ -80,7 +80,7 @@ public class ConnectorResourceGrpc {
         connectorListBuilder.addConnectors(connector);
     }
 
-    private String getConnectorState(Boolean status) {
+    private static String getConnectorState(Boolean status) {
 
         if (status) {
             return "enabled";
