@@ -18,28 +18,29 @@ import static org.wso2.micro.integrator.initializer.dashboard.grpcClient.Constan
 
 public class LoggingResourceGrpc {
 
-    private PropertiesConfiguration config;
-    private PropertiesConfigurationLayout layout;
+    private static PropertiesConfiguration config;
+    private static PropertiesConfigurationLayout layout;
     private static final Log log = LogFactory.getLog(LoggingResourceGrpc.class);
     private static final String FILE_PATH = System.getProperty(ServerConstants.CARBON_CONFIG_DIR_PATH) + File.separator
             + "log4j2.properties";
     private static final File LOG_PROP_FILE = new File(FILE_PATH);
-    private static final String EXCEPTION_MSG = "Exception while getting logger data ";
     private static final String LOGGER_PREFIX = "logger.";
     private static final String LOGGER_LEVEL_SUFFIX = ".level";
     private static final String LOGGER_NAME_SUFFIX = ".name";
-    private static final String LOGGER_CLASS = "loggerClass";
     private static final String LOGGERS_PROPERTY = "loggers";
 
-    private JSONObject createInfoJSON(String loggerName, String logLevel){
+    private static JSONObject createInfoJSON(String loggerName, String logLevel){
         JSONObject info = new JSONObject();
         info.put(Constants.LOGGER_NAME, loggerName);
         info.put(Constants.LOGGING_LEVEL, logLevel);
         return info;
     }
-    private void updateLoggerData(String performedBy, String loggerName, String loggerClass, String logLevel) {
+    public static org.wso2.micro.integrator.grpc.proto.Message updateLoggerData(String loggerName, String loggerClass, String logLevel) {
+
+        org.wso2.micro.integrator.grpc.proto.Message.Builder messageBuilder = org.wso2.micro.integrator.grpc.proto.Message.newBuilder();
 
         try {
+            String performedBy = Constants.ANONYMOUS_USER;
             loadConfigs();
             String modifiedLogger = getLoggers().concat(", ").concat(loggerName);
             config.setProperty(LOGGERS_PROPERTY, modifiedLogger);
@@ -50,16 +51,18 @@ public class LoggingResourceGrpc {
                     .setMessage(getSuccessMsg(loggerClass, loggerName, logLevel)).build();
             JSONObject info = createInfoJSON(loggerName, logLevel);
             AuditLogger.logAuditMessage(performedBy, Constants.AUDIT_LOG_TYPE_LOG_LEVEL, Constants.AUDIT_LOG_ACTION_CREATED, info);
-
+            messageBuilder.setMessage("Successfully added logger for ("+ loggerName +") with level "+logLevel);
         } catch (ConfigurationException | IOException exception) {
             createProtoError("Exception while updating logger data ", exception);
         }
+        return messageBuilder.build();
     }
 
-    private org.wso2.micro.integrator.grpc.proto.Message updateLoggerData(String performedBy, String loggerName, String logLevel) {
+    public static org.wso2.micro.integrator.grpc.proto.Message updateLoggerData(String loggerName, String logLevel) {
 
         org.wso2.micro.integrator.grpc.proto.Message.Builder messageBuilder = org.wso2.micro.integrator.grpc.proto.Message.newBuilder();
         try {
+            String performedBy = Constants.ANONYMOUS_USER;
             loadConfigs();
             if (loggerName.equals(ROOT_LOGGER)) {
                 config.setProperty(loggerName + LOGGER_LEVEL_SUFFIX, logLevel);
@@ -85,42 +88,38 @@ public class LoggingResourceGrpc {
         return messageBuilder.build();
     }
 
-    private String getSuccessMsg(String loggerClass, String loggerName, String logLevel) {
+    private static String getSuccessMsg(String loggerClass, String loggerName, String logLevel) {
 
         return "Successfully added logger for ('" + loggerName + "') with level " + logLevel + (loggerClass.isEmpty() ?
                 "" :
                 " for class " + loggerClass);
     }
 
-    private void loadConfigs() throws FileNotFoundException, ConfigurationException {
+    private static void loadConfigs() throws FileNotFoundException, ConfigurationException {
         config = new PropertiesConfiguration();
         layout = new PropertiesConfigurationLayout(config);
         layout.load(new InputStreamReader(new FileInputStream(LOG_PROP_FILE)));
     }
 
-    private boolean isLoggerExist(String loggerName) throws IOException {
+    private static boolean isLoggerExist(String loggerName) throws IOException {
         String logger = getLoggers();
         String[] loggers = logger.split(",");
         return Arrays.stream(loggers).anyMatch(loggerValue -> loggerValue.trim().equals(loggerName));
     }
 
-    private static String getLoggers() throws IOException {
+    private static String getLoggers() {
         return GrpcUtils.getProperty(LOG_PROP_FILE, LOGGERS_PROPERTY);
     }
 
-    private org.wso2.micro.integrator.grpc.proto.LogConfig getLoggerData(String loggerName) {
+    private static org.wso2.micro.integrator.grpc.proto.LogConfig getLoggerData(String loggerName) {
 
         String logLevel = null;
         String componentName = "";
-        try {
-            if (loggerName.equals(ROOT_LOGGER)) {
-                logLevel = GrpcUtils.getProperty(LOG_PROP_FILE, loggerName + LOGGER_LEVEL_SUFFIX);
-            } else {
-                componentName = GrpcUtils.getProperty(LOG_PROP_FILE, LOGGER_PREFIX + loggerName + LOGGER_NAME_SUFFIX);
-                logLevel = GrpcUtils.getProperty(LOG_PROP_FILE, LOGGER_PREFIX + loggerName + LOGGER_LEVEL_SUFFIX);
-            }
-        } catch (IOException exception) {
-            createProtoError("Error while obtaining logger data ", exception);
+        if (loggerName.equals(ROOT_LOGGER)) {
+            logLevel = GrpcUtils.getProperty(LOG_PROP_FILE, loggerName + LOGGER_LEVEL_SUFFIX);
+        } else {
+            componentName = GrpcUtils.getProperty(LOG_PROP_FILE, LOGGER_PREFIX + loggerName + LOGGER_NAME_SUFFIX);
+            logLevel = GrpcUtils.getProperty(LOG_PROP_FILE, LOGGER_PREFIX + loggerName + LOGGER_LEVEL_SUFFIX);
         }
 
         org.wso2.micro.integrator.grpc.proto.LogConfig logConfig = org.wso2.micro.integrator.grpc.proto.LogConfig.newBuilder()
@@ -132,7 +131,7 @@ public class LoggingResourceGrpc {
         return logConfig;
     }
 
-    private String[] getAllLoggers() throws IOException {
+    private static String[] getAllLoggers(){
         //along with root logger
         String[] loggers = getLoggers().split(",");
         // add root logger
@@ -145,12 +144,12 @@ public class LoggingResourceGrpc {
         return allLoggers;
     }
 
-    private void getAllLoggerDetails() throws IOException {
+    public static org.wso2.micro.integrator.grpc.proto.LogConfigList getAllLoggerDetails() {
         String[] loggers = getAllLoggers();
-        setGrpcResponseBody(Arrays.asList(loggers));
+        return setGrpcResponseBody(Arrays.asList(loggers));
     }
 
-    private List<String> getSearchResults(String searchKey) throws IOException {
+    private static List<String> getSearchResults(String searchKey) {
         String[] allLoggers = getAllLoggers();
         List<String> filteredLoggers = new ArrayList<>();
 
@@ -162,13 +161,13 @@ public class LoggingResourceGrpc {
         return filteredLoggers;
     }
 
-    private void getAllLoggerDetails(String searchKey) throws IOException {
+    public static org.wso2.micro.integrator.grpc.proto.LogConfigList getAllLoggerDetails(String searchKey) {
         List<String> resultsList = getSearchResults(searchKey);
-        setGrpcResponseBody(resultsList);
+        return setGrpcResponseBody(resultsList);
     }
 
 
-    private void setGrpcResponseBody(List<String> logConfigsList) {
+    private static org.wso2.micro.integrator.grpc.proto.LogConfigList setGrpcResponseBody(List<String> logConfigsList) {
 
         org.wso2.micro.integrator.grpc.proto.LogConfigList.Builder logConfigListBuilder =
                 org.wso2.micro.integrator.grpc.proto.LogConfigList.newBuilder().setCount(logConfigsList.size());
@@ -177,16 +176,17 @@ public class LoggingResourceGrpc {
             org.wso2.micro.integrator.grpc.proto.LogConfig data  = getLoggerData(logger.trim());
             logConfigListBuilder.addLogConfigs(data);
         }
+        return logConfigListBuilder.build();
 //        Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
 //        axis2MessageContext.removeProperty(NO_ENTITY_BODY);
     }
 
-    private void createProtoError(String message, Object exception) {
+    private static void createProtoError(String message, Object exception) {
         log.error(message + exception);
         GrpcUtils.createProtoError(message);
     }
 
-    private void applyConfigs() throws IOException, ConfigurationException {
+    private static void applyConfigs() throws IOException, ConfigurationException {
         layout.save(new FileWriter(FILE_PATH, false));
         GrpcUtils.updateLoggingConfiguration();
     }

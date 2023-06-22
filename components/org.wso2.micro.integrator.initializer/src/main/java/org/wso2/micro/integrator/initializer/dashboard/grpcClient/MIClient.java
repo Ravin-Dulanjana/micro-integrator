@@ -97,25 +97,94 @@ public class MIClient {
             @Override
             public void onNext(DataResponse dataResponse) {
                 int responseType = dataResponse.getResponseType().getNumber();
-                String response = dataResponse.getResponse();
                 if (responseType == 0){
                     requestObserver.onNext(DataRequest.newBuilder().setServerInfo(serverInfo).build());
                 } else if (responseType == 1) {
+                    String response = dataResponse.getResponse();
                     if (response.equals("")) {
                         requestObserver.onNext(DataRequest.newBuilder().setApiList(ApiResourceGrpc.populateApiList()).build());
                     } else {
                         requestObserver.onNext(DataRequest.newBuilder().setApiList(ApiResourceGrpc.populateSearchResults(response)).build());
                     }
                 } else if (responseType == 2) {
+                    String response = dataResponse.getResponse();
                     requestObserver.onNext(DataRequest.newBuilder().setApi(ApiResourceGrpc.populateGrpcApiData(response)).build());
                 }  else if (responseType == 3) {
+                    String response = dataResponse.getResponse();
                     if (response.equals("")) {
                         requestObserver.onNext(DataRequest.newBuilder().setEndpointList(EndpointResourceGrpc.populateEndpointList()).build());
                     } else {
                         requestObserver.onNext(DataRequest.newBuilder().setEndpointList(EndpointResourceGrpc.populateSearchResults(response)).build());
                     }
                 } else if (responseType == 4) {
+                    String response = dataResponse.getResponse();
                     requestObserver.onNext(DataRequest.newBuilder().setEndpoint(EndpointResourceGrpc.populateEndpointData(response)).build());
+                } else if (responseType == 5) {
+                    String response = dataResponse.getResponse();
+                    if (response.equals("")) {
+                        requestObserver.onNext(DataRequest.newBuilder().setCarbonAppList(CarbonAppResourceGrpc.populateCarbonAppList()).build());
+                    } else {
+                        requestObserver.onNext(DataRequest.newBuilder().setCarbonAppList(CarbonAppResourceGrpc.populateSearchResults(response)).build());
+                    }
+                } else if (responseType == 6) {
+                    String response = dataResponse.getResponse();
+                    requestObserver.onNext(DataRequest.newBuilder().setCarbonApp(CarbonAppResourceGrpc.populateGrpcCarbonAppData(response)).build());
+                } else if (responseType == 7) {
+                    String response = dataResponse.getResponse();
+                    if (response.equals("")) {
+                        requestObserver.onNext(DataRequest.newBuilder().setConnectorList(ConnectorResourceGrpc.populateConnectorList()).build());
+                    } else {
+                        requestObserver.onNext(DataRequest.newBuilder().setConnectorList(ConnectorResourceGrpc.populateSearchResults(response)).build());
+                    }
+                } else if (responseType == 8) {
+                    String response = dataResponse.getResponse();
+                    requestObserver.onNext(DataRequest.newBuilder().setConnector(ConnectorResourceGrpc.populateConnectorData(response)).build());
+                } else if (responseType == 9) {
+                    String response = dataResponse.getResponse();
+                    if (response.equals("")) {
+                        requestObserver.onNext(DataRequest.newBuilder().setDataServiceList(DataServiceResourceGrpc.populateDataServiceList()).build());
+                    } else {
+                        requestObserver.onNext(DataRequest.newBuilder().setDataServiceList(DataServiceResourceGrpc.populateSearchResults(response)).build());
+                    }
+                } else if (responseType == 10) {
+                    String response = dataResponse.getResponse();
+                    requestObserver.onNext(DataRequest.newBuilder().setDataService(DataServiceResourceGrpc.populateDataServiceByName(response)).build());
+                }else if (responseType == 11) {
+                    String response = dataResponse.getResponse();
+                    if (response.equals("")) {
+                        requestObserver.onNext(DataRequest.newBuilder().setInboundEndpointList(InboundEndpointResourceGrpc.populateInboundEndpointList()).build());
+                    } else {
+                        requestObserver.onNext(DataRequest.newBuilder().setInboundEndpointList(InboundEndpointResourceGrpc.populateSearchResults(response)).build());
+                    }
+                } else if (responseType == 12) {
+                    String response = dataResponse.getResponse();
+                    requestObserver.onNext(DataRequest.newBuilder().setInboundEndpoint(InboundEndpointResourceGrpc.populateInboundEndpointData(response)).build());
+                } else if (responseType == 13) {
+                    String response = dataResponse.getResponse();
+                    if (response.equals("")) {
+                        requestObserver.onNext(DataRequest.newBuilder().setLogFileList(LogFilesResourceGrpc.populateLogFileInfo()).build());
+                    } else {
+                        requestObserver.onNext(DataRequest.newBuilder().setLogFileList(LogFilesResourceGrpc.populateSearchResults(response)).build());
+                    }
+                } else if (responseType == 14) {
+                    String response = dataResponse.getResponse();
+                    requestObserver.onNext(DataRequest.newBuilder().setMessage(LogFilesResourceGrpc.populateFileContent(response)).build());
+                } else if (responseType == 15) {
+                    String response = dataResponse.getResponse();
+                    if (response.equals("")) {
+                        requestObserver.onNext(DataRequest.newBuilder().setLogConfigList(LoggingResourceGrpc.getAllLoggerDetails()).build());
+                    } else {
+                        requestObserver.onNext(DataRequest.newBuilder().setLogConfigList(LoggingResourceGrpc.getAllLoggerDetails(response)).build());
+                    }
+                } else if (responseType == 16) {
+                    String loggerName = dataResponse.getUpdateConfigLog().getLoggerName();
+                    String loggerClass = dataResponse.getUpdateConfigLog().getLoggerClass();
+                    String logLevel = dataResponse.getUpdateConfigLog().getLogLevel();
+                    if (loggerClass != null) {
+                        requestObserver.onNext(DataRequest.newBuilder().setMessage(LoggingResourceGrpc.updateLoggerData(loggerName, loggerClass, logLevel)).build());
+                    } else {
+                        requestObserver.onNext(DataRequest.newBuilder().setMessage(LoggingResourceGrpc.updateLoggerData(loggerName, logLevel)).build());
+                    }
                 }
             }
 

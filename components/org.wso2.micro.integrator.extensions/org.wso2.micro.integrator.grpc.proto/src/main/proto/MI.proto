@@ -20,9 +20,23 @@ message DataResponse {
     ENDPOINTLIST = 3;
     ENDPOINT = 4;
     CARBONAPPLIST = 5;
+    CARBONAPP = 6;
+    CONNECTORLIST = 7;
+    CONNECTOR = 8;
+    DATASERVICELIST = 9;
+    DATASERVICE = 10;
+    INBOUNDENDPOINTLIST = 11;
+    INBOUNDENDPOINT = 12;
+    LOGFILELIST = 13;
+    LOGFILEDOWNLOAD = 14;
+    LOGCONFIGLIST = 15;
+    LOGUPDATE = 16;
   }
   ResponseType responseType = 1;
-  string response = 2;
+  oneof responses{
+    string response = 2;
+    UpdateConfigLog updateConfigLog = 3;
+  }
 }
 
 message DataRequest {
@@ -42,12 +56,19 @@ message DataRequest {
     DataServiceList dataServiceList = 13;
     DataService dataService = 14;
     InboundEndpointList inboundEndpointList = 15;
+    InboundEndpoint inboundEndpoint= 21; //change the order later
     LogFileList logFileList = 16;
     LogConfigList logConfigList = 17;
     MessageProcessorsList messageProcessorsList = 18;
     MessageStoreList messageStoreList = 19;
     ProxyServiceList proxyServiceList = 20;
   }
+}
+
+message UpdateConfigLog{
+  string loggerName = 1;
+  string loggerClass = 2;
+  string logLevel = 3;
 }
 
 message Handshake{
