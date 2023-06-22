@@ -13,48 +13,6 @@ public class MIClient {
     private final String nodeID = "dev_Node";
     private final String groupID = "dev_Grp";
     //Hard-coded
-    API api = API.newBuilder()
-            .setTracing("disabled")
-            .setStats("disabled").setPort(-1)
-            .setConfiguration("<api xmlns=\\\"http://ws.apache.org/ns/synapse\\\" name=\\\"HealthcareAPI\\\" context=\\\"/healthcare\\\" binds-to=\\\"default\\\"><resource methods=\\\"GET\\\" binds-to=\\\"default\\\" uri-template=\\\"/doctor/{doctorType}\\\"><inSequence><clone><target><sequence><call><endpoint key=\\\"GrandOakEndpoint\\\"/><\\/call><\\/sequence><\\/target><target><sequence><payloadFactory media-type=\\\"json\\\"><format>\\n\\t\\t\\t\\t\\t\\t\\t\\t{ \\\"doctorType\\\": \\\"$1\\\" }\\n\\t\\t\\t\\t\\t\\t\\t<\\/format><args><arg evaluator=\\\"xml\\\" expression=\\\"$ctx:uri.var.doctorType\\\"/><\\/args><\\/payloadFactory><call><endpoint key=\\\"PineValleyEndpoint\\\"/><\\/call><\\/sequence><\\/target><\\/clone><aggregate><completeCondition><messageCount min=\\\"-1\\\" max=\\\"-1\\\"/><\\/completeCondition><onComplete aggregateElementType=\\\"root\\\" expression=\\\"json-eval($.doctors.doctor)\\\"><respond/><\\/onComplete><\\/aggregate><\\/inSequence><outSequence/><faultSequence/><\\/resource><\\/api>")
-            .setName("HealthcareAPI")
-            .setContext("/healthcare")
-            .addResources(Resource.newBuilder().addMethods("GET").setUrl("/doctor/{doctorType}").build())
-            .setVersion("N/A").build();
-    APISummary apiSummary = APISummary.newBuilder()
-            .setTracing("disabled")
-            .setName("HealthcareAPI")
-            .setUrl("http://localhost:8290/healthcare").build();
-    APIList apiList = APIList.newBuilder().setCount(1).addApiSummaries(apiSummary).build();
-
-    Endpoint endpoint1 = Endpoint.newBuilder()
-            .setTracing("disabled")
-            .setMethod("GET")
-            .setConfiguration("<endpoint xmlns=\\\"http://ws.apache.org/ns/synapse\\\" name=\\\"GrandOakEndpoint\\\"><http method=\\\"GET\\\" uri-template=\\\"http://localhost:9090/grandOak/doctors/{uri.var.doctorType}\\\"/><\\/endpoint>")
-            .setUriTemplate("http://localhost:9090/grandOak/doctors/")
-            .setName("GrandOakEndpoint")
-            .setType("HTTP Endpoint")
-            .setIsActive(true).build();
-    Endpoint endpoint2 = Endpoint.newBuilder()
-            .setTracing("disabled")
-            .setMethod("POST")
-            .setConfiguration("<endpoint xmlns=\\\"http://ws.apache.org/ns/synapse\\\" name=\\\"PineValleyEndpoint\\\"><http method=\\\"POST\\\" uri-template=\\\"http://localhost:9091/pineValley/doctors\\\"/><\\/endpoint>")
-            .setUriTemplate("http://localhost:9091/pineValley/doctors")
-            .setName("PineValleyEndpoint")
-            .setType("HTTP Endpoint")
-            .setIsActive(true).build();
-    EndpointSummary endpointSummary1 = EndpointSummary.newBuilder()
-            .setName("GrandOakEndpoint")
-            .setType("HTTP Endpoint")
-            .setIsActive(true).build();
-    EndpointSummary endpointSummary2 = EndpointSummary.newBuilder()
-            .setName("PineValleyEndpoint")
-            .setType("HTTP Endpoint")
-            .setIsActive(true).build();
-    EndpointList endpointList = EndpointList.newBuilder()
-            .setCount(2)
-            .addEndPointSummaries(endpointSummary1)
-            .addEndPointSummaries(endpointSummary2).build();
     ServerInfo serverInfo = ServerInfo.newBuilder()
             .setProductVersion("4.2.0-alpha")
             .setOsVersion("10.0")
@@ -185,6 +143,16 @@ public class MIClient {
                     } else {
                         requestObserver.onNext(DataRequest.newBuilder().setMessage(LoggingResourceGrpc.updateLoggerData(loggerName, logLevel)).build());
                     }
+                }else if (responseType == 17) {
+                    String response = dataResponse.getResponse();
+                    if (response.equals("")) {
+                        requestObserver.onNext(DataRequest.newBuilder().setMessageProcessorsList(MessageProcessorResourceGrpc.populateMessageProcessorList()).build());
+                    } else {
+                        requestObserver.onNext(DataRequest.newBuilder().setMessageProcessorsList(MessageProcessorResourceGrpc.populateSearchResults(response)).build());
+                    }
+                } else if (responseType == 18) {
+                    String response = dataResponse.getResponse();
+                    requestObserver.onNext(DataRequest.newBuilder().setMessageProcessor(MessageProcessorResourceGrpc.populateMessageProcessorData(response)).build());
                 }
             }
 

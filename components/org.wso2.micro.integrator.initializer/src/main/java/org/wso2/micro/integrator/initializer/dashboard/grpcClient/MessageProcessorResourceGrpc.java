@@ -1,27 +1,16 @@
 package org.wso2.micro.integrator.initializer.dashboard.grpcClient;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import org.apache.commons.io.IOUtils;
-import org.apache.synapse.MessageContext;
-import org.apache.synapse.commons.json.JsonUtil;
 import org.apache.synapse.config.SynapseConfigUtils;
 import org.apache.synapse.config.SynapseConfiguration;
 import org.apache.synapse.config.xml.MessageProcessorSerializer;
-import org.apache.synapse.core.axis2.Axis2MessageContext;
 import org.apache.synapse.message.processor.MessageProcessor;
 import org.apache.synapse.message.processor.impl.failover.FailoverScheduledMessageForwardingProcessor;
 import org.apache.synapse.message.processor.impl.forwarder.ScheduledMessageForwardingProcessor;
 import org.apache.synapse.message.processor.impl.sampler.SamplingProcessor;
-import org.json.JSONObject;
-import org.wso2.micro.core.util.AuditLogger;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.wso2.carbon.inbound.endpoint.common.Constants.SUPER_TENANT_DOMAIN_NAME;
@@ -34,7 +23,7 @@ public class MessageProcessorResourceGrpc {
     private static final String FAILOVER_SCHEDULED_MESSAGE_FORWARDING_TYPE = "Failover-scheduled-message-forwarding-processor";
     private static final String CUSTOM_PROCESSOR_TYPE = "Custom-message-processor";
 
-    private List<MessageProcessor> getSearchResults(String searchKey) {
+    private static List<MessageProcessor> getSearchResults(String searchKey) {
         SynapseConfiguration configuration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         return configuration.getMessageProcessors().values().stream()
                 .filter(artifact -> artifact.getName().toLowerCase().contains(searchKey))
@@ -42,41 +31,45 @@ public class MessageProcessorResourceGrpc {
     }
 
 
-    private void populateSearchResults(String searchKey) {
+    public static org.wso2.micro.integrator.grpc.proto.MessageProcessorsList populateSearchResults(String searchKey) {
 
         List<MessageProcessor> searchResultList = getSearchResults(searchKey);
-        setGrpcResponseBody(searchResultList);
+        return setGrpcResponseBody(searchResultList);
     }
 
-    private void setGrpcResponseBody(Collection<MessageProcessor> processorList) {
+    private static org.wso2.micro.integrator.grpc.proto.MessageProcessorsList setGrpcResponseBody(Collection<MessageProcessor> processorList) {
 
         org.wso2.micro.integrator.grpc.proto.MessageProcessorsList.Builder messageProcessorsListBuilder = org.wso2.micro.integrator.grpc.proto.MessageProcessorsList.newBuilder().setCount(processorList.size());
 
         for (MessageProcessor processor : processorList) {
             messageProcessorsListBuilder.addMessageProcessorSummaries(getProtoMessageProcessor(processor));
         }
-        //Utils.setJsonPayLoad(axis2MessageContext, jsonBody);
+        return messageProcessorsListBuilder.build();
     }
 
-    private void populateMessageProcessorList() {
+    public static org.wso2.micro.integrator.grpc.proto.MessageProcessorsList populateMessageProcessorList() {
         SynapseConfiguration synapseConfiguration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         Map<String, MessageProcessor> processorMap = synapseConfiguration.getMessageProcessors();
         Collection<MessageProcessor> processorList = processorMap.values();
-        setGrpcResponseBody(processorList);
+        return setGrpcResponseBody(processorList);
     }
 
-    private void populateMessageProcessorData(String name) {
+    public static org.wso2.micro.integrator.grpc.proto.MessageProcessor populateMessageProcessorData(String name) {
         SynapseConfiguration synapseConfiguration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);
         MessageProcessor messageProcessor = synapseConfiguration.getMessageProcessors().get(name);
+        return getMessageProcessorAsProtoBuf(messageProcessor);
+
+        /*
+        Have not handled the case where messageProcessor is null. Need to handle it.
         if (Objects.nonNull(messageProcessor)) {
-            org.wso2.micro.integrator.grpc.proto.MessageProcessor messageProcessorPB = getMessageProcessorAsProtoBuf(messageProcessor);
             //send message processor data
         } else {
             GrpcUtils.createProtoError("Specified message processor ('" + name + "') not found");
         }
+        */
     }
 
-    private org.wso2.micro.integrator.grpc.proto.MessageProcessorSummary getProtoMessageProcessor(MessageProcessor messageProcessor) {
+    private static org.wso2.micro.integrator.grpc.proto.MessageProcessorSummary getProtoMessageProcessor(MessageProcessor messageProcessor) {
         org.wso2.micro.integrator.grpc.proto.MessageProcessorSummary.Builder messageProcessorSummaryBuilder = org.wso2.micro.integrator.grpc.proto.MessageProcessorSummary.newBuilder();
         messageProcessorSummaryBuilder.setName(messageProcessor.getName());
         messageProcessorSummaryBuilder.setType(getMessageProcessorType(messageProcessor));
@@ -84,7 +77,7 @@ public class MessageProcessorResourceGrpc {
         return messageProcessorSummaryBuilder.build();
     }
 
-    private org.wso2.micro.integrator.grpc.proto.MessageProcessor getMessageProcessorAsProtoBuf(MessageProcessor messageProcessor) {
+    private static org.wso2.micro.integrator.grpc.proto.MessageProcessor getMessageProcessorAsProtoBuf(MessageProcessor messageProcessor) {
         org.wso2.micro.integrator.grpc.proto.MessageProcessor.Builder messageProcessorBuilder = org.wso2.micro.integrator.grpc.proto.MessageProcessor.newBuilder();
         messageProcessorBuilder.setName(messageProcessor.getName());
         messageProcessorBuilder.setType(getMessageProcessorType(messageProcessor));
@@ -98,7 +91,7 @@ public class MessageProcessorResourceGrpc {
         return messageProcessorBuilder.build();
     }
 
-    private String getMessageProcessorType(MessageProcessor messageProcessor) {
+    private static String getMessageProcessorType(MessageProcessor messageProcessor) {
         if (messageProcessor instanceof ScheduledMessageForwardingProcessor) {
             return SCHEDULED_MESSAGE_FORWARDING_TYPE;
         } else if (messageProcessor instanceof FailoverScheduledMessageForwardingProcessor) {
@@ -146,7 +139,7 @@ public class MessageProcessorResourceGrpc {
 
     }*/
 
-    private String getProcessorState(Boolean isDeactivated) {
+    private static String getProcessorState(Boolean isDeactivated) {
         if (isDeactivated) {
             return INACTIVE_STATUS;
         }

@@ -31,6 +31,10 @@ message DataResponse {
     LOGFILEDOWNLOAD = 14;
     LOGCONFIGLIST = 15;
     LOGUPDATE = 16;
+    MESSAGEPROCESSORSLIST = 17;
+    MESSAGEPROCESSOR = 18;
+    MESSAGESTORELIST = 19;
+
   }
   ResponseType responseType = 1;
   oneof responses{
@@ -60,6 +64,7 @@ message DataRequest {
     LogFileList logFileList = 16;
     LogConfigList logConfigList = 17;
     MessageProcessorsList messageProcessorsList = 18;
+    MessageProcessor messageProcessor = 22; //change the order later
     MessageStoreList messageStoreList = 19;
     ProxyServiceList proxyServiceList = 20;
   }
