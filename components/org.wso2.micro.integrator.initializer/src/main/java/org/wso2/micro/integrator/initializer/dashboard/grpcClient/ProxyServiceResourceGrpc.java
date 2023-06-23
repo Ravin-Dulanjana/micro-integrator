@@ -145,6 +145,7 @@ public class ProxyServiceResourceGrpc {
         return proxyServiceBuilder.build();
     }
 
+    //not handled yet
     private void changeProxyState(String performedBy, JSONObject info, String name, String status) {
 
         SynapseConfiguration synapseConfiguration = SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME);

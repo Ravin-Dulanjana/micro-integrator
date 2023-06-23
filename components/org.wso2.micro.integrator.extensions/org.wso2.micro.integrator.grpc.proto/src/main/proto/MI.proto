@@ -37,6 +37,10 @@ message DataResponse {
     MESSAGESTORE =20;
     PROXYSERVICELIST = 21;
     PROXYSERVICE = 22;
+    ROLELIST = 23;
+    ROLE = 24;
+    SEQUENCELIST = 25;
+    SEQUENCE = 26;
   }
   ResponseType responseType = 1;
   oneof responses{
@@ -71,6 +75,10 @@ message DataRequest {
     MessageStore messageStore = 23; //change the order later
     ProxyServiceList proxyServiceList = 20;
     ProxyService proxyService = 24;
+    RoleList roleList = 25;
+    Role role = 26;
+    SequenceList sequenceList = 27;
+    Sequence sequence = 28;
   }
 }
 
@@ -471,4 +479,25 @@ message RoleList{
 message Role{
   string roleName = 1;
   repeated string users = 2;
+}
+
+message SequenceList{
+  int32 count = 1;
+  repeated SequenceSummary sequenceSummaries = 2;
+}
+
+message SequenceSummary{
+  string name = 1;
+  string container = 2;
+  string statisticState = 3;
+  string tracingState = 4;
+}
+
+message Sequence{
+  string name = 1;
+  string container = 2;
+  string statisticsState = 3;
+  string tracingState = 4;
+  repeated string methods = 5;
+  string configuration = 6;
 }

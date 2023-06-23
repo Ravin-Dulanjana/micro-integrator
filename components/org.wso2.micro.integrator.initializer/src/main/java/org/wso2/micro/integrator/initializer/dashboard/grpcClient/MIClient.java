@@ -173,7 +173,18 @@ public class MIClient {
                 } else if (responseType == 22) {
                     String response = dataResponse.getResponse();
                     requestObserver.onNext(DataRequest.newBuilder().setProxyService(ProxyServiceResourceGrpc.populateProxyServiceData(response)).build());
+                } else if (responseType == 25) {
+                    String response = dataResponse.getResponse();
+                    if (response.equals("")) {
+                        requestObserver.onNext(DataRequest.newBuilder().setSequenceList(SequenceResourceGrpc.populateSequenceList()).build());
+                    } else {
+                        requestObserver.onNext(DataRequest.newBuilder().setSequenceList(SequenceResourceGrpc.populateSearchResults(response)).build());
+                    }
+                } else if (responseType == 26) {
+                    String response = dataResponse.getResponse();
+                    requestObserver.onNext(DataRequest.newBuilder().setSequence(SequenceResourceGrpc.populateSequenceData(response)).build());
                 }
+
             }
 
             @Override
