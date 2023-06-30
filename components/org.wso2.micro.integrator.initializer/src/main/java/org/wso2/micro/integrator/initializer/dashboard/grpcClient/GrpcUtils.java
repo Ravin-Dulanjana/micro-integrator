@@ -14,14 +14,22 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.wso2.micro.core.util.AuditLogger;
 import org.wso2.micro.integrator.initializer.dashboard.ArtifactUpdateListener;
 import org.wso2.micro.integrator.initializer.utils.ConfigurationHolder;
+import org.wso2.micro.integrator.registry.MicroIntegratorRegistry;
+import org.wso2.micro.integrator.security.MicroIntegratorSecurityUtils;
+import org.wso2.micro.integrator.security.user.api.UserStoreException;
+import org.wso2.micro.integrator.security.user.api.UserStoreManager;
+import org.wso2.micro.integrator.security.user.core.UserCoreConstants;
+import org.wso2.micro.integrator.security.user.core.common.AbstractUserStoreManager;
 import org.wso2.micro.service.mgt.ServiceAdmin;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 import static org.wso2.carbon.inbound.endpoint.common.Constants.SUPER_TENANT_DOMAIN_NAME;
+import static org.wso2.micro.integrator.initializer.dashboard.grpcClient.Constants.*;
 
 public class GrpcUtils {
 
@@ -147,7 +155,7 @@ public class GrpcUtils {
         return defaultLogFileInfoList;
     }
 
-    public static String getProperty(File srcFile, String key) throws IOException {
+    public static String getProperty(File srcFile, String key) {
 
         String value;
         try (FileInputStream fis = new FileInputStream(srcFile)) {
@@ -155,7 +163,11 @@ public class GrpcUtils {
             properties.load(fis);
             value = properties.getProperty(key);
         } catch (IOException e) {
-            throw new IOException("Error occurred while reading the input stream");
+            try {
+                throw new IOException("Error occurred while reading the input stream");
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
         }
         return value;
     }
@@ -183,5 +195,57 @@ public class GrpcUtils {
             }
         }
         return new Hashtable();
+    }
+
+    public static boolean isRegistryExist(String registryPath) {
+        MicroIntegratorRegistry microIntegratorRegistry =
+                (MicroIntegratorRegistry) SynapseConfigUtils.getSynapseConfiguration(SUPER_TENANT_DOMAIN_NAME).getRegistry();
+        String regRoot = microIntegratorRegistry.getRegRoot();
+        String resolvedPath = formatPath(regRoot + File.separator + registryPath + File.separator);
+        try {
+            File file = new File(resolvedPath);
+            return file.exists();
+        } catch (Exception e) {
+            LOG.error("Error occurred while checking the existence of the registry", e);
+            return false;
+        }
+    }
+
+    public static String formatPath(String path) {
+        // removing white spaces
+        String pathFormatted = path.replaceAll("\\b\\s+\\b", "%20");
+        try {
+            pathFormatted = java.net.URLDecoder.decode(pathFormatted, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            LOG.error("Unsupported Encoding in the path :" + pathFormatted);
+        }
+        // replacing all "\" with "/"
+        return pathFormatted.replace('\\', '/');
+    }
+
+    public static String getRegistryPathPrefix(String path) {
+
+        String pathWithPrefix;
+        if (path.startsWith(CONFIGURATION_REGISTRY_PATH)) {
+            pathWithPrefix = path.replace(CONFIGURATION_REGISTRY_PATH, CONFIGURATION_REGISTRY_PREFIX);
+        } else if (path.startsWith(GOVERNANCE_REGISTRY_PATH)) {
+            pathWithPrefix = path.replace(GOVERNANCE_REGISTRY_PATH, GOVERNANCE_REGISTRY_PREFIX);
+        } else if (path.startsWith(LOCAL_REGISTRY_PATH)) {
+            pathWithPrefix = path.replace(LOCAL_REGISTRY_PATH, LOCAL_REGISTRY_PREFIX);
+        } else {
+            return null;
+        }
+        return pathWithPrefix;
+    }
+    protected static UserStoreManager getUserStore(String domain) throws UserStoreException {
+        UserStoreManager userStoreManager = MicroIntegratorSecurityUtils.getUserStoreManager();
+        if (!StringUtils.isEmpty(domain) && userStoreManager instanceof AbstractUserStoreManager &&
+                !UserCoreConstants.PRIMARY_DEFAULT_DOMAIN_NAME.equalsIgnoreCase(domain)) {
+            userStoreManager = ((AbstractUserStoreManager) userStoreManager).getSecondaryUserStoreManager(domain);
+            if (userStoreManager == null) {
+                throw new UserStoreException("Could not find a user-store for the given domain " + domain);
+            }
+        }
+        return userStoreManager;
     }
 }

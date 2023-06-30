@@ -51,7 +51,6 @@ public class EndpointResourceGrpc {
         } else {
             GrpcUtils.createProtoError("Unsupported operation");
         }
-        //Utils.setJsonPayLoad(axisMsgCtx, response);
         //return GRPCUtils.handleTracing();
     }
 
