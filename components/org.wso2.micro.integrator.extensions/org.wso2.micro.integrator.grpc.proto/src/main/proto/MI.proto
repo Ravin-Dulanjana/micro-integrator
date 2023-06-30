@@ -41,6 +41,9 @@ message DataResponse {
     ROLE = 24;
     SEQUENCELIST = 25;
     SEQUENCE = 26;
+    TASKLIST = 27;
+    TASK = 28;
+    TEMPLATELIST = 29;
   }
   ResponseType responseType = 1;
   oneof responses{
@@ -79,6 +82,9 @@ message DataRequest {
     Role role = 26;
     SequenceList sequenceList = 27;
     Sequence sequence = 28;
+    TaskList taskList = 29;
+    Task task = 30;
+    TemplateList templateList = 31;
   }
 }
 
@@ -266,13 +272,11 @@ message QueryParam{
   bool optional = 10;
   int32 valueType = 11;
   string scalarValue = 12;
-  //google.protobuf.Struct udt = 13;
 }
 
 message ParamValue{
   int32 valueType = 1;
   string scalarValue = 2;
-  //google.protobuf.Struct udt = 3;
 }
 
 message Validator{
@@ -500,4 +504,62 @@ message Sequence{
   string tracingState = 4;
   repeated string methods = 5;
   string configuration = 6;
+}
+
+message TaskList{
+  int32 count = 1;
+  repeated string name = 2;
+}
+
+message Task{
+  string name = 1;
+  string taskGroup = 2;
+  string taskImplementation = 3;
+  string cronExpression = 4;
+  int32 triggerCount = 5;
+  int64 triggerInterval = 6;
+  string triggerType = 7;
+  map<string, string> properties = 8;
+  string configuration = 9;
+}
+
+message TemplateList{
+  int32 count = 1;
+  repeated TemplateSummary templateSummaries = 2;
+}
+
+message TemplateTypeList{
+  int32 count = 1;
+  repeated TemplateName templateNames = 2;
+}
+
+message TemplateSummary{
+  oneof templates{
+    EndpointTemplateSummary endpointTemplateSummary = 1;
+    SequenceTemplateSummary sequenceTemplateSummary = 2;
+  }
+}
+
+message EndpointTemplateSummary{
+  string name = 1;
+  repeated string parameters = 2;
+  string configuration = 3;
+  string templateType = 4;
+}
+
+message SequenceTemplateSummary{
+  string name = 1;
+  repeated TemplateParam parameters = 2;
+  string configuration = 3;
+  string templateType = 4;
+}
+
+message TemplateParam{
+  string name = 1;
+  string defaultValue = 2;
+  bool isMandatory = 3;
+}
+
+message TemplateName{
+  string name = 1;
 }
